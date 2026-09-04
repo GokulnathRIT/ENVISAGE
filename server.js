@@ -265,7 +265,7 @@ if (require.main === module) {
   // Start listening on 0.0.0.0 (IPv4 + IPv6 everywhere)
   app.listen(PORT, '0.0.0.0', () => {
     console.log('===========================================================');
-    console.log(`  PRITHVI-RAKSHAK LOCALHOST SERVER ACTIVE!                 `);
+    console.log(`  🌍 ENVISAGE AI LOCALHOST SERVER ACTIVE!                 `);
     console.log(`  URL: http://localhost:${PORT}                             `);
     console.log(`  IP:  http://127.0.0.1:${PORT}                             `);
     console.log('===========================================================');

@@ -1,7 +1,7 @@
 {
-  "name": "sih26178",
+  "name": "envisage-ai",
   "version": "1.0.0",
-  "description": "",
+  "description": "🌍 ENVISAGE AI: Multi-Hazard Environmental Early Warning Sentinel",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
