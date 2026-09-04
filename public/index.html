@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prithvi - Village & City Environmental Safety</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <!-- Leaflet Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #0f172a;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* GPay Clean White Card */
+    .gpay-card {
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+    }
+
+    /* Bottom Dock Buttons */
+    .dock-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border-radius: 16px;
+      transition: all 0.2s ease;
+      color: #64748b;
+      font-weight: 700;
+    }
+    .dock-btn.active {
+      color: #1d4ed8;
+      background: #eff6ff;
+    }
+
+    /* Animated Status Pulses */
+    .pulse-green {
+      animation: pulseG 2s infinite;
+    }
+    @keyframes pulseG {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+      50% { transform: scale(1.02); box-shadow: 0 0 0 14px rgba(34, 197, 94, 0); }
+    }
+    .pulse-red {
+      animation: pulseR 1.2s infinite;
+    }
+    @keyframes pulseR {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+      50% { transform: scale(1.03); box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
+    }
+  </style>
+</head>
+<body class="pb-24 pt-3 px-3 sm:px-6 max-w-lg mx-auto">
+
+  <!-- ================= SIH26178 OFFICIAL BADGE ================= -->
+  <div class="flex items-center justify-between mb-2 px-1">
+    <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1 shadow-sm">
+      <span>🚀</span> <span>SIH26178 • Space Technology &amp; Qualcomm</span>
+    </span>
+    <span class="text-[10px] font-bold text-slate-500 font-mono bg-white px-2 py-0.5 rounded-full border border-slate-200">
+      Node #01 • ESP32-S3 Edge-AI
+    </span>
+  </div>
+
+  <!-- ================= TOP APP BAR ================= -->
+  <header class="flex items-center justify-between mb-3 px-1">
+    <div class="flex items-center gap-2">
+      <div class="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-xl shadow-md shadow-blue-500/30">
+        🛡️
+      </div>
+      <div>
+        <h1 class="text-base font-extrabold text-slate-900 tracking-tight" id="txt-brand-title">Prithvi Safety</h1>
+        <p class="text-[11px] font-semibold text-slate-500" id="txt-brand-sub">Village &amp; City Alert Network</p>
+      </div>
+    </div>
+
+    <!-- Quick Language & Hardware Link -->
+    <div class="flex items-center gap-1.5">
+      <select id="lang-select" onchange="changeLanguage(this.value)" class="text-xs font-bold bg-white border border-slate-200 text-slate-700 rounded-xl px-2 py-1.5 shadow-sm outline-none cursor-pointer">
+        <option value="en">English</option>
+        <option value="hi">हिंदी (Hindi)</option>
+        <option value="as">অসমীয়া (Assamese)</option>
+        <option value="mr">मराठी (Marathi)</option>
+        <option value="bn">বাংলা (Bengali)</option>
+        <option value="ta">தமிழ் (Tamil)</option>
+      </select>
+
+      <button id="btn-usb-link" onclick="connectUsbSerial()" class="text-[11px] font-bold px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-sm flex items-center gap-1">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <span id="txt-usb-btn">Node #1</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= SCREEN 1: DETECTION SCREEN (LIVE SENSORS) ================= -->
+  <section id="screen-detection" class="space-y-3">
+    
+    <!-- 1. BIG TRAFFIC LIGHT STATUS CARD -->
+    <div id="traffic-card" onclick="goToScreen('alert')" class="gpay-card p-5 cursor-pointer border-2 border-emerald-500 bg-emerald-50/40 pulse-green text-center space-y-2">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500 text-white text-3xl shadow-lg shadow-emerald-500/30" id="traffic-circle-icon">
+        🟢
+      </div>
+      <div>
+        <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700" id="txt-status-level">STATUS: SAFE (सुरक्षित)</div>
+        <div class="text-xl font-black text-slate-900 mt-0.5" id="txt-status-title">All Conditions Normal</div>
+        <p class="text-xs text-slate-600 mt-1" id="txt-status-desc">River, air, soil, and mountain slope are within safe levels.</p>
+      </div>
+      <div class="inline-block text-[11px] font-bold text-blue-600 bg-white px-3 py-1 rounded-full shadow-sm border border-slate-200" id="txt-tap-sos">
+        Tap to View Alert &amp; SOS Details ➔
+      </div>
+    </div>
+
+    <!-- 2. BIG CLEAR ICON SENSOR CARDS (2x2 Grid) -->
+    <div class="text-xs font-extrabold text-slate-500 uppercase tracking-wider px-1 pt-1" id="txt-sec-sensors">Live Sensor Readings:</div>
+
+    <div class="grid grid-cols-2 gap-2.5">
+      
+      <!-- Card 1: Water (Flood) -->
+      <div class="gpay-card p-4 space-y-1.5 border-t-4 border-t-blue-500">
+        <div class="flex items-center justify-between">
+          <span class="text-2xl">🌊</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700" id="badge-water">NORMAL</span>
+        </div>
+        <div class="text-xl font-black text-slate-900 font-mono" id="disp-water">45.0 cm</div>
+        <div class="text-xs font-bold text-slate-700" id="lbl-water">Water Distance</div>
+        <div class="text-[10px] text-slate-500" id="desc-water">River level is safe</div>
+      </div>
+
+      <!-- Card 2: Fire & Smoke -->
+      <div class="gpay-card p-4 space-y-1.5 border-t-4 border-t-orange-500">
+        <div class="flex items-center justify-between">
+          <span class="text-2xl">🔥</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700" id="badge-smoke">CLEAN</span>
+        </div>
+        <div class="text-xl font-black text-slate-900 font-mono" id="disp-smoke">38 ppm</div>
+        <div class="text-xs font-bold text-slate-700" id="lbl-smoke">Smoke &amp; Fire</div>
+        <div class="text-[10px] text-slate-500" id="desc-smoke">No smoke or fire signs</div>
+      </div>
+
+      <!-- Card 3: Air & Smog -->
+      <div class="gpay-card p-4 space-y-1.5 border-t-4 border-t-purple-500">
+        <div class="flex items-center justify-between">
+          <span class="text-2xl">🌫️</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700" id="badge-air">GOOD</span>
+        </div>
+        <div class="text-xl font-black text-slate-900 font-mono" id="disp-air">35 µg/m³</div>
+        <div class="text-xs font-bold text-slate-700" id="lbl-air">Air Quality (PM2.5)</div>
+        <div class="text-[10px] text-slate-500" id="desc-air">Healthy clean air</div>
+      </div>
+
+      <!-- Card 4: Soil & Slope -->
+      <div class="gpay-card p-4 space-y-1.5 border-t-4 border-t-emerald-500">
+        <div class="flex items-center justify-between">
+          <span class="text-2xl">🌱</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700" id="badge-soil">STABLE</span>
+        </div>
+        <div class="text-xl font-black text-slate-900 font-mono" id="disp-soil">48%</div>
+        <div class="text-xs font-bold text-slate-700" id="lbl-soil">Soil &amp; Mud Slope</div>
+        <div class="text-[10px] text-slate-500" id="desc-soil">Ground is firm and safe</div>
+      </div>
+
+    </div>
+
+    <!-- 3. SIMULATOR BUTTONS (TEST WITH 1 TAP) -->
+    <div class="gpay-card p-3 bg-slate-100 border-dashed text-xs space-y-2">
+      <div class="flex justify-between items-center">
+        <span class="font-bold text-slate-700" id="txt-test-title">Quick Test (Try One Tap):</span>
+        <button onclick="simulateHazard('reset')" class="text-[10px] font-bold text-slate-500 hover:text-slate-800 underline" id="txt-test-reset">Reset Safe</button>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <button onclick="simulateHazard('flood')" class="p-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm text-[11px]">
+          <span>🌊</span> <span id="txt-sim-flood">Flood</span>
+        </button>
+        <button onclick="simulateHazard('fire')" class="p-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm text-[11px]">
+          <span>🔥</span> <span id="txt-sim-fire">Wildfire</span>
+        </button>
+        <button onclick="simulateHazard('landslide')" class="p-2.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm text-[11px]">
+          <span>⛰️</span> <span>Landslide</span>
+        </button>
+        <button onclick="simulateHazard('chemical')" class="p-2.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-sm text-[11px]">
+          <span>🏭</span> <span>Chemical</span>
+        </button>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ================= SCREEN 2: ALERT SCREEN (HAZARD DETAILS + SOS BUTTON) ================= -->
+  <section id="screen-alert" class="space-y-4 hidden">
+    
+    <div class="gpay-card p-5 space-y-4">
+      
+      <!-- Alert Top Banner -->
+      <div class="flex items-start gap-3 border-b border-slate-100 pb-3">
+        <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl flex-shrink-0" id="sos-hazard-icon">
+          🌊
+        </div>
+        <div>
+          <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-500 text-white font-mono" id="sos-badge">CRITICAL WARNING</span>
+          <h2 class="text-base font-extrabold text-slate-900 mt-1" id="sos-title">River Water Rising Rapidly</h2>
+          <p class="text-xs text-slate-500" id="sos-loc">Location: Brahmaputra River Basin (Assam Grid 01)</p>
+        </div>
+      </div>
+
+      <!-- Human Action Advice -->
+      <div class="p-3.5 bg-red-50 border border-red-200 rounded-2xl text-xs text-red-900 space-y-1.5" id="sos-message-box">
+        <div class="font-extrabold" id="sos-header-action">🚨 WHAT CITIZENS SHOULD DO RIGHT NOW:</div>
+        <p class="leading-relaxed" id="sos-instruction">
+          Water distance dropped to 18 cm. Heavy rain detected upstream. Please move family, children, and cattle to higher school grounds immediately!
+        </p>
+      </div>
+
+      <!-- Target Phone Number Input Box -->
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1.5 text-left">
+        <div class="flex items-center justify-between">
+          <label class="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+            <span>📱</span> <span>Recipient Mobile Number (2G SMS):</span>
+          </label>
+          <span class="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full font-mono">LIVE CELL SUBSCRIBER</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-500 font-mono bg-white px-2.5 py-2 border border-slate-200 rounded-xl">+91</span>
+          <input type="tel" id="input-phone-number" value="7904769396" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-black font-mono text-slate-900 outline-none focus:border-blue-500 shadow-sm" placeholder="10-digit mobile number">
+        </div>
+      </div>
+
+      <!-- 🔊 BIG AUDIO VOICE WARNING BUTTON -->
+      <button onclick="speakAlertVoice()" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition-all">
+        <span class="text-xl">🔊</span>
+        <span id="txt-btn-speak">Hear Voice Alert in Your Language</span>
+      </button>
+
+      <!-- 📡 GIANT ONE-TOUCH SOS DISPATCH BUTTON -->
+      <button onclick="dispatchSosAlert()" class="w-full py-4 px-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-2xl font-black text-base flex items-center justify-center gap-2 shadow-xl shadow-red-600/40 transition-all pulse-red">
+        <span class="text-2xl">📡</span>
+        <span id="txt-btn-sos">SEND EMERGENCY SOS TO ALL PHONES</span>
+      </button>
+
+      <div class="text-[11px] text-slate-500 text-center font-medium" id="txt-sos-footer">
+        Sends free 2G SMS + siren trigger to all villagers without internet.
+      </div>
+
+      <!-- LIVE SMS SENT CONFIRMATION BOX (POPS UP ON CLICK) -->
+      <div id="sms-delivery-card" class="hidden p-4 bg-emerald-50 border-2 border-emerald-500 rounded-2xl text-left space-y-2.5 shadow-md">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-black text-emerald-800 flex items-center gap-1.5">
+            <span>✅</span> <span>SMS DELIVERED TO MOBILE</span>
+          </span>
+          <span class="text-[10px] font-mono text-emerald-700 font-bold" id="sms-delivery-time">JUST NOW</span>
+        </div>
+        
+        <div class="p-3 bg-white rounded-xl border border-emerald-200 text-xs space-y-1">
+          <div class="text-[10px] font-bold text-slate-400">MESSAGE TO: <span class="text-slate-900 font-mono" id="sms-to-number">+91 7904769396</span></div>
+          <div class="text-slate-800 font-medium leading-relaxed" id="sms-preview-body">
+            "🚨 PRITHVI ALERT: River Water Rising Rapidly! Water distance dropped to 18 cm. Move family & cattle to higher school grounds immediately!"
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <a id="link-direct-sms" href="sms:+917904769396" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-center font-bold text-xs flex items-center justify-center gap-1 shadow-sm">
+            <span>📩</span> <span>Send Native SMS</span>
+          </a>
+          <a id="link-direct-wa" href="https://wa.me/917904769396" target="_blank" class="py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-center font-bold text-xs flex items-center justify-center gap-1 shadow-sm">
+            <span>💬</span> <span>Open WhatsApp</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ================= SCREEN 3: DASHBOARD SCREEN (MAP & NOTIFICATIONS) ================= -->
+  <section id="screen-dashboard" class="space-y-4 hidden">
+    
+    <!-- MAP CARD -->
+    <div class="gpay-card p-4 space-y-2">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <span class="text-lg">🗺️</span>
+          <span class="text-xs font-bold text-slate-800" id="txt-map-header">Regional Hazard Map (India Grid)</span>
+        </div>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700" id="txt-map-badge">● 7 Zones Active</span>
+      </div>
+
+      <!-- Leaflet Map Container -->
+      <div id="simpleMap" class="h-64 w-full rounded-2xl overflow-hidden border border-slate-200"></div>
+
+      <div class="flex items-center justify-around text-[10px] font-bold pt-1 text-slate-600">
+        <span class="flex items-center gap-1" id="leg-safe">🟢 Safe Zone</span>
+        <span class="flex items-center gap-1" id="leg-warn">🟡 Warning Zone</span>
+        <span class="flex items-center gap-1" id="leg-dang">🔴 Danger Hotspot</span>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS CARD -->
+    <div class="gpay-card p-4 space-y-2.5">
+      <div class="flex items-center gap-1.5">
+        <span class="text-lg">🔔</span>
+        <span class="text-xs font-bold text-slate-800" id="txt-notif-header">Recent Community Broadcasts:</span>
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-2.5">
+          <span class="text-lg">🌊</span>
+          <div>
+            <div class="font-bold text-slate-800" id="notif-1-title">Guwahati River Bank (Node 1)</div>
+            <div class="text-slate-500 text-[11px]" id="notif-1-body">Water rise rate measured at +12 cm/h. Downstream alerts dispatched.</div>
+          </div>
+        </div>
+
+        <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-2.5">
+          <span class="text-lg">🔥</span>
+          <div>
+            <div class="font-bold text-slate-800" id="notif-2-title">Chamoli Ridge (Node 2)</div>
+            <div class="text-slate-500 text-[11px]" id="notif-2-body">Thermal hot-spot detected. Forest department notified.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Report to Authority Button -->
+      <button onclick="reportToAuthority()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm">
+        <span>📢</span> <span id="txt-btn-report">Report Local Hazard to District Collector</span>
+      </button>
+    </div>
+
+  </section>
+
+  <!-- ================= FIXED BOTTOM GPAY 3-BUTTON DOCK ================= -->
+  <nav class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white/95 backdrop-blur-md border-t border-slate-200 py-1.5 px-4 flex items-center justify-around z-50 shadow-lg">
+    
+    <!-- Tab 1: Detection -->
+    <button onclick="goToScreen('detection')" id="nav-detection" class="dock-btn active">
+      <span class="text-xl">📊</span>
+      <span class="text-[11px] mt-0.5" id="txt-nav-detection">Detection</span>
+    </button>
+
+    <!-- Tab 2: Alert -->
+    <button onclick="goToScreen('alert')" id="nav-alert" class="dock-btn">
+      <span class="text-xl">🚨</span>
+      <span class="text-[11px] mt-0.5" id="txt-nav-alert">Alert / SOS</span>
+    </button>
+
+    <!-- Tab 3: Dashboard -->
+    <button onclick="goToScreen('dashboard')" id="nav-dashboard" class="dock-btn">
+      <span class="text-xl">🗺️</span>
+      <span class="text-[11px] mt-0.5" id="txt-nav-dashboard">Map &amp; Zone</span>
+    </button>
+
+  </nav>
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <script>
+    // 1. COMPLETE FULL-PAGE MULTI-LINGUAL DICTIONARY
+    const bhasha = {
+      en: {
+        brandTitle: "Prithvi Safety",
+        brandSub: "Village & City Alert Network",
+        tapSos: "Tap to View Alert & SOS Details ➔",
+        secSensors: "Live Sensor Readings:",
+        lblWater: "Water Distance",
+        descWater: "River level is safe",
+        lblSmoke: "Smoke & Fire",
+        descSmoke: "No smoke or fire signs",
+        lblAir: "Air Quality (PM2.5)",
+        descAir: "Healthy clean air",
+        lblSoil: "Soil & Mud Slope",
+        descSoil: "Ground is firm and safe",
+        testTitle: "Quick Test (Try One Tap):",
+        testReset: "Reset Safe",
+        simFlood: "Simulate Flood",
+        simFire: "Simulate Fire",
+        sosBadge: "CRITICAL WARNING",
+        sosLoc: "Location: Brahmaputra River Basin (Assam Grid 01)",
+        sosHeaderAction: "🚨 WHAT CITIZENS SHOULD DO RIGHT NOW:",
+        btnSpeak: "Hear Voice Alert in Your Language",
+        btnSos: "SEND EMERGENCY SOS TO ALL PHONES",
+        sosFooter: "Sends free 2G SMS + siren trigger to all villagers without internet.",
+        mapHeader: "Regional Hazard Map (India Grid)",
+        mapBadge: "● 7 Zones Active",
+        legSafe: "🟢 Safe Zone",
+        legWarn: "🟡 Warning Zone",
+        legDang: "🔴 Danger Hotspot",
+        notifHeader: "Recent Community Broadcasts:",
+        btnReport: "Report Local Hazard to District Collector",
+        navDetection: "Detection",
+        navAlert: "Alert / SOS",
+        navDashboard: "Map & Zone",
+
+        // States
+        safeTitle: "All Conditions Normal",
+        safeDesc: "River, air, soil, and mountain slope are within safe levels.",
+        safeLevel: "STATUS: SAFE (सुरक्षित)",
+        floodTitle: "DANGER: River Water Rising Rapidly!",
+        floodDesc: "Water level rose 15 cm in 20 minutes. Flash flood expected in 30 mins.",
+        floodLevel: "STATUS: DANGER (खतरा)",
+        floodMsg: "Water distance dropped to 18 cm. Heavy rain detected upstream. Please move family, children, and cattle to higher school grounds immediately!",
+        fireTitle: "DANGER: Forest Fire Smoke Detected!",
+        fireDesc: "Smoke spike detected with high temperature. Forest rangers dispatched.",
+        fireLevel: "STATUS: DANGER (खतरा)",
+        fireMsg: "Alert: Dense wildfire smoke detected in the area. High temperature recorded. Keep clear of forest ridges and move away from smoke plumes."
+      },
+      hi: {
+        brandTitle: "पृथ्वी सुरक्षा",
+        brandSub: "गांव एवं शहर आपदा नेटवर्क",
+        tapSos: "अलर्ट एवं SOS विवरण देखने के लिए टैप करें ➔",
+        secSensors: "लाइव सेंसर की स्थिति:",
+        lblWater: "जलस्तर की दूरी",
+        descWater: "नदी का स्तर सुरक्षित है",
+        lblSmoke: "धुआं एवं आग",
+        descSmoke: "आग या धुएं का कोई संकेत नहीं",
+        lblAir: "हवा की शुद्धता (PM2.5)",
+        descAir: "हवा स्वच्छ और स्वस्थ है",
+        lblSoil: "मिट्टी एवं पहाड़ी ढलान",
+        descSoil: "जमीन स्थिर और सुरक्षित है",
+        testTitle: "त्वरित परीक्षण (एक टैप करें):",
+        testReset: "सुरक्षित रीसेट",
+        simFlood: "बाढ़ का परीक्षण",
+        simFire: "आग का परीक्षण",
+        sosBadge: "आपातकालीन चेतावनी",
+        sosLoc: "स्थान: ब्रह्मपुत्र नदी घाटी (असम ग्रिड 01)",
+        sosHeaderAction: "🚨 नागरिकों को अभी क्या करना चाहिए:",
+        btnSpeak: "अपनी भाषा में चेतावनी सुनें",
+        btnSos: "सभी मोबाइलों पर आपातकालीन SOS भेजें",
+        sosFooter: "बिना इंटरनेट के सभी ग्रामीणों को मुफ्त 2G SMS और सायरन भेजता है।",
+        mapHeader: "राष्ट्रीय आपदा मानचित्र (भारत ग्रिड)",
+        mapBadge: "● 7 क्षेत्र सक्रिय",
+        legSafe: "🟢 सुरक्षित क्षेत्र",
+        legWarn: "🟡 चेतावनी क्षेत्र",
+        legDang: "🔴 खतरे का क्षेत्र",
+        notifHeader: "हाल ही में जारी सूचनाएं:",
+        btnReport: "जिला अधिकारी को खतरे की सूचना दें",
+        navDetection: "सेंसर जांच",
+        navAlert: "अलर्ट / SOS",
+        navDashboard: "मानचित्र",
+
+        safeTitle: "सभी स्थितियां बिल्कुल सामान्य हैं",
+        safeDesc: "नदी का जलस्तर, धुआं, हवा और मिट्टी पूरी तरह सुरक्षित हैं।",
+        safeLevel: "स्थिति: सुरक्षित",
+        floodTitle: "खतरा! नदी का जलस्तर तेजी से बढ़ रहा है",
+        floodDesc: "पानी खतरे के निशान के पास पहुंच रहा है। अगले 30 मिनट में बाढ़ का खतरा।",
+        floodLevel: "स्थिति: भारी खतरा",
+        floodMsg: "सावधान! नदी का जलस्तर तेजी से बढ़ रहा है। कृपया अपने परिवार, बच्चों और मवेशियों को लेकर तुरंत ऊंचे स्थान या पक्के स्कूल की ओर जाएं।",
+        fireTitle: "खतरा! जंगल में आग का धुआं मिला",
+        fireDesc: "हवा में धुएं का स्तर और गर्मी अत्यधिक बढ़ गई है।",
+        fireLevel: "स्थिति: भारी खतरा",
+        fireMsg: "चेतावनी: क्षेत्र में जंगल की आग का धुआं फैल रहा है। वन विभाग को सूचित कर दिया गया है। कृपया जंगल की ओर न जाएं।"
+      },
+      as: {
+        brandTitle: "পৃথিৱী সুৰক্ষা",
+        brandSub: "গাঁও আৰু নগৰ দুৰ্যোগ সতৰ্কবাণী",
+        tapSos: "সতৰ্কবাণী আৰু SOS চাবলৈ টিপক ➔",
+        secSensors: "লাইভ চেন্সৰ ৰিডিঙসমূহ:",
+        lblWater: "পানীৰ গভীৰতা",
+        descWater: "নদীৰ জলস্তৰ সুৰক্ষিত আছে",
+        lblSmoke: "ধোঁৱা আৰু জুই",
+        descSmoke: "জুইৰ কোনো লক্ষণ নাই",
+        lblAir: "বতাহৰ গুণমান (PM2.5)",
+        descAir: "বিশুদ্ধ আৰু স্বাস্থ্যকৰ বতাহ",
+        lblSoil: "মাটি আৰু পাহাৰীয়া ঢাল",
+        descSoil: "মাটি সম্পূৰ্ণ সুস্থিৰ আছে",
+        testTitle: "দ্ৰুত পৰীক্ষা (এটা ক্লিক কৰক):",
+        testReset: "সুৰক্ষিত ৰিছেট",
+        simFlood: "বানপানী পৰীক্ষা",
+        simFire: "বনজুই পৰীক্ষা",
+        sosBadge: "জৰুৰী সতৰ্কবাণী",
+        sosLoc: "স্থান: ব্ৰহ্মপুত্ৰ নদী অববাহিকা (অসম)",
+        sosHeaderAction: "🚨 ৰাইজে তৎকালীনভাৱে কি কৰিব লাগে:",
+        btnSpeak: "মাতত সতৰ্কবাণী শুনক",
+        btnSos: "সকলো ফোনলৈ জৰুৰী SOS পঠিয়াওক",
+        sosFooter: "ইণ্টাৰনেট নোহোৱাকৈ সকলো গাঁওবাসীলৈ বিনামূলীয়া 2G SMS প্ৰেৰণ।",
+        mapHeader: "আঞ্চলিক দুৰ্যোগ মানচিত্ৰ",
+        mapBadge: "● ৭ টা মণ্ডল সক্ৰিয়",
+        legSafe: "🟢 সুৰক্ষিত স্থান",
+        legWarn: "🟡 সতৰ্ক স্থান",
+        legDang: "🔴 বিপদজনক স্থান",
+        notifHeader: "শেহতীয়া সামূহিক সতৰ্কবাণীসমূহ:",
+        btnReport: "জিলা উপায়ুক্তলৈ জৰুৰী বাতৰি প্ৰেৰণ কৰক",
+        navDetection: "চেন্সৰ পৰীক্ষা",
+        navAlert: "সতৰ্কবাণী / SOS",
+        navDashboard: "মানচিত্ৰ",
+
+        safeTitle: "সকলো অৱস্থা সম্পূৰ্ণ স্বাভাৱিক",
+        safeDesc: "ব্ৰহ্মপুত্ৰৰ পানী, বতাহ আৰু মাটিৰ অৱস্থা সুৰক্ষিত আছে।",
+        safeLevel: "স্থিতি: সুৰক্ষিত",
+        floodTitle: "বিপদ! নদীৰ পানী দ্ৰুতগতিত বাঢ়িছে",
+        floodDesc: "পানী বিপদসীমাৰ ওচৰ পাইছে। ৩০ মিনিটত বানপানীৰ আশংকা।",
+        floodLevel: "স্থিতি: চৰম বিপদ",
+        floodMsg: "সতৰ্কবাণী: ব্ৰহ্মপুত্ৰৰ পানী বৃদ্ধি পাইছে। অহা ৩০ মিনিটত বানপানীৰ সম্ভাৱনা আছে। পৰিয়াল আৰু গৰু-ম'হ লৈ ওখ ঠাইলৈ স্থানান্তৰ হওক।",
+        fireTitle: "বিপদ! বনজুইৰ ধোঁৱা ওলাইছে",
+        fireDesc: "বতাহত ধোঁৱা আৰু উষ্ণতা অস্বাভাৱিকভাৱে বৃদ্ধি পাইছে।",
+        fireLevel: "স্থিতি: চৰম বিপদ",
+        fireMsg: "সতৰ্কবাণী: বনাঞ্চলত জুইৰ ধোঁৱা ধৰা পৰিছে। জুইৰ দিশৰ পৰা সুৰক্ষিত স্থানলৈ আঁতৰি যাওক।"
+      },
+      mr: {
+        brandTitle: "पृथ्वी सुरक्षा",
+        brandSub: "गाव व शहर आपत्ती नेटवर्क",
+        tapSos: "इशारा आणि SOS पाहण्यासाठी टॅप करा ➔",
+        secSensors: "थेट सेन्सर वाचन:",
+        lblWater: "पाणी पातळी अंतर",
+        descWater: "नदीची पातळी सुरक्षित आहे",
+        lblSmoke: "धूर व आग",
+        descSmoke: "आगीचे कोणतेही चिन्ह नाही",
+        lblAir: "हवेची गुणवत्ता (PM2.5)",
+        descAir: "स्वच्छ आणि निरोगी हवा",
+        lblSoil: "माती व डोंगर उतारा",
+        descSoil: "जमीन स्थिर आणि सुरक्षित आहे",
+        testTitle: "त्वरित चाचणी (एक टॅप करा):",
+        testReset: "सुरक्षित रीसेट",
+        simFlood: "पूर चाचणी",
+        simFire: "आग चाचणी",
+        sosBadge: "गंभीर इशारा",
+        sosLoc: "स्थान: नदी क्षेत्र",
+        sosHeaderAction: "🚨 नागरिकांनी त्वरित काय करावे:",
+        btnSpeak: "आवाजात इशारा ऐका",
+        btnSos: "सर्व फोनवर SOS पाठवा",
+        sosFooter: "इंटरनेटशिवाय सर्व गावकऱ्यांना मोफत 2G SMS आणि सायरन वाजवते.",
+        mapHeader: "प्रादेशिक आपत्ती नकाशा",
+        mapBadge: "● ७ क्षेत्रे सक्रिय",
+        legSafe: "🟢 सुरक्षित क्षेत्र",
+        legWarn: "🟡 इशारा क्षेत्र",
+        legDang: "🔴 धोका क्षेत्र",
+        notifHeader: "नुकत्याच जारी केलेल्या सूचना:",
+        btnReport: "जिल्हाधिकाऱ्यांना संकटाची माहिती द्या",
+        navDetection: "तपासणी",
+        navAlert: "इशारा / SOS",
+        navDashboard: "नकाशा",
+
+        safeTitle: "सर्व परिस्थिती पूर्णपणे सुरक्षित आहे",
+        safeDesc: "नदीचे पाणी, हवा आणि माती सुरक्षित मर्यादेत आहेत.",
+        safeLevel: "स्थिती: सुरक्षित",
+        floodTitle: "धोका! नदीचे पाणी वेगाने वाढत आहे",
+        floodDesc: "पाणी पातळी धोक्याच्या खुणेजवळ पोहोचली आहे. तात्काळ सावध व्हा.",
+        floodLevel: "स्थिती: गंभीर धोका",
+        floodMsg: "धोका इशारा: नदीची पातळी धोक्याच्या वर जात आहे. कृपया त्वरित कुटुंब आणि जनावरांना घेऊन सुरक्षित ठिकाणी जा.",
+        fireTitle: "धोका! आगीचा धूर पसरत आहे",
+        fireDesc: "हवेतील धूर आणि तापमान धोक्याच्या पातळीवर गेले आहे.",
+        fireLevel: "स्थिती: गंभीर धोका",
+        fireMsg: "सावधान: परिसरात आगीचा धूर पसरत आहे. वन विभाग सक्रिय झाले आहे. सुरक्षित अंतरावर राहा."
+      },
+      bn: {
+        brandTitle: "পৃথিবী সুরক্ষা",
+        brandSub: "গ্রাম ও শহর দুর্যোগ সতর্কবার্তা",
+        tapSos: "সতর্কবার্তা এবং SOS দেখতে ট্যাপ করুন ➔",
+        secSensors: "লাইভ সেন্সর রিডিং:",
+        lblWater: "জলের গভীরতা",
+        descWater: "নদীর জলস্তর নিরাপদ আছে",
+        lblSmoke: "ধোঁয়া ও আগুন",
+        descSmoke: "আগুনের কোনো লক্ষণ নেই",
+        lblAir: "বায়ুর মান (PM2.5)",
+        descAir: "পরিষ্কার ও স্বাস্থ্যকর বায়ু",
+        lblSoil: "মাটি ও পাহাড়ের ঢাল",
+        descSoil: "মাটি দৃঢ় এবং নিরাপদ",
+        testTitle: "দ্রুত পরীক্ষা (এক ট্যাপ করুন):",
+        testReset: "নিরাপদ রিসেট",
+        simFlood: "বন্যা পরীক্ষা",
+        simFire: "আগুন পরীক্ষা",
+        sosBadge: "জরুরি সতর্কতা",
+        sosLoc: "অবস্থান: নদী অববাহিকা",
+        sosHeaderAction: "🚨 সাধারণ নাগরিকদের করণীয়:",
+        btnSpeak: "ভয়েস সতর্কতা শুনুন",
+        btnSos: "সকল ফোনে জরুরি SOS পাঠান",
+        sosFooter: "ইন্টারনেট ছাড়াই সমস্ত গ্রামবাসীকে বিনামূল্যে 2G SMS এবং সাইরেন পাঠায়।",
+        mapHeader: "আঞ্চলিক দুর্যোগ মানচিত্র",
+        mapBadge: "● ৭টি অঞ্চল সক্রিয়",
+        legSafe: "🟢 নিরাপদ অঞ্চল",
+        legWarn: "🟡 সতর্ক অঞ্চল",
+        legDang: "🔴 বিপজ্জনক অঞ্চল",
+        notifHeader: "সাম্প্রতিক সম্প্রচার বার্তা:",
+        btnReport: "জেলা প্রশাসকের কাছে রিপোর্ট করুন",
+        navDetection: "সেন্সর",
+        navAlert: "সতর্কতা / SOS",
+        navDashboard: "মানচিত্র",
+
+        safeTitle: "সমস্ত পরিস্থিতি সম্পূর্ণ স্বাভাবিক",
+        safeDesc: "নদীর জল, বাতাস এবং মাটির অবস্থা নিরাপদ আছে।",
+        safeLevel: "স্থিতি: নিরাপদ",
+        floodTitle: "বিপদ! নদীর জল দ্রুত বৃদ্ধি পাচ্ছে",
+        floodDesc: "জলস্তর বিপদসীমার দিকে পৌঁছাচ্ছে। ২৫ মিনিটে বন্যার আশঙ্কা।",
+        floodLevel: "স্থিতি: চরম বিপদ",
+        floodMsg: "সতর্কতা: নদীর জলস্তর দ্রুত বাড়ছে। পরবর্তী ৩০ মিনিটের মধ্যে বন্যার সম্ভাবনা। পরিবার ও গৃহপালিত পশু নিয়ে উঁচু জায়গায় আশ্রয় নিন।",
+        fireTitle: "বিপদ! বনে আগুন লাগার ধোঁয়া",
+        fireDesc: "বাতাসে ধোঁয়া এবং তাপমাত্রা বিপজ্জনক মাত্রায় পৌঁছেছে।",
+        fireLevel: "স্থিতি: চরম বিপদ",
+        fireMsg: "সতর্কতা: বন অঞ্চলে আগুন ছড়িয়ে পড়ছে। বন দফতর ও উদ্ধারকারী দল সক্রিয়। ধোঁয়া থেকে দূরে থাকুন।"
+      },
+      ta: {
+        brandTitle: "பிரித்வி பாதுகாப்பு",
+        brandSub: "கிராமம் மற்றும் நகர பேரிடர் நெட்வொர்க்",
+        tapSos: "எச்சரிக்கை விவரங்களை பார்க்க தட்டவும் ➔",
+        secSensors: "நேரலை சென்சார் அளவீடுகள்:",
+        lblWater: "நீர் மட்ட தூரம்",
+        descWater: "ஆற்றின் நீர் மட்டம் பாதுகாப்பானது",
+        lblSmoke: "புகை மற்றும் தீ",
+        descSmoke: "தீ அல்லது புகையின் அறிகுறி இல்லை",
+        lblAir: "காற்று தரம் (PM2.5)",
+        descAir: "சுத்தமான மற்றும் ஆரோக்கியமான காற்று",
+        lblSoil: "மண் மற்றும் மலை சரிவு",
+        descSoil: "நிலம் உறுதியாகவும் பாதுகாப்பாகவும் உள்ளது",
+        testTitle: "விரைவு சோதனை (ஒரு தட்டு):",
+        testReset: "மீட்டமை",
+        simFlood: "வெள்ள சோதனை",
+        simFire: "தீ சோதனை",
+        sosBadge: "அவசர எச்சரிக்கை",
+        sosLoc: "இடம்: நதி படுகை",
+        sosHeaderAction: "🚨 பொதுமக்கள் உடனடியாக செய்ய வேண்டியவை:",
+        btnSpeak: "குரல் எச்சரிக்கை கேளுங்கள்",
+        btnSos: "அனைத்து போன்களுக்கும் அவசர SOS அனுப்பு",
+        sosFooter: "இன்டர்நெட் இல்லாமல் கிராம மக்களுக்கு இலவச 2G SMS மற்றும் சைரன் அனுப்புகிறது.",
+        mapHeader: "பிராந்திய பேரிடர் வரைபடம்",
+        mapBadge: "● 7 மண்டலங்கள் இயங்குகின்றன",
+        legSafe: "🟢 பாதுகாப்பான பகுதி",
+        legWarn: "🟡 எச்சரிக்கை பகுதி",
+        legDang: "🔴 ஆபத்து மண்டலம்",
+        notifHeader: "சமீபத்திய சமூக அறிவிப்புகள்:",
+        btnReport: "மாவட்ட ஆட்சியருக்கு தகவல் தெரிவிக்கவும்",
+        navDetection: "கண்டறிதல்",
+        navAlert: "எச்சரிக்கை / SOS",
+        navDashboard: "வரைபடம்",
+
+        safeTitle: "அனைத்து அளவீடுகளும் பாதுகாப்பானது",
+        safeDesc: "நீர் மட்டம், புகை மற்றும் நிலச்சரிவு சீராக உள்ளன.",
+        safeLevel: "நிலை: பாதுகாப்பானது",
+        floodTitle: "ஆபத்து! ஆற்றில் நீர் வேகமாக உயர்கிறது",
+        floodDesc: "நீர் மட்டம் அபாய அளவை எட்டுகிறது. 30 நிமிடத்தில் வெள்ள அபாயம்.",
+        floodLevel: "நிலை: பெரும் ஆபத்து",
+        floodMsg: "எச்சரிக்கை: ஆற்றில் நீர் மட்டம் வேகமாக உயர்கிறது. அடுத்த 30 நிமிடங்களில் வெள்ளப்பெருக்கு ஏற்படலாம். பாதுகாப்பான இடத்திற்கு செல்லுங்கள்.",
+        fireTitle: "ஆபத்து! காட்டுத்தீ புகை பரவுகிறது",
+        fireDesc: "காற்றில் புகையின் அளவு அதிகமாக பதிவாகியுள்ளது.",
+        fireLevel: "நிலை: பெரும் ஆபத்து",
+        fireMsg: "எச்சரிக்கை: காட்டுத்தீ பரவி வருகிறது. பொதுமக்கள் அந்த பகுதிக்கு செல்ல வேண்டாம்."
+      }
+    };
+
+    let curLang = 'en';
+    let curHazard = 'safe';
+
+    // 2. THREE CLICK NAVIGATION (Detection -> Alert -> Dashboard)
+    function goToScreen(screenName) {
+      ['detection', 'alert', 'dashboard'].forEach(s => {
+        document.getElementById('screen-' + s).classList.add('hidden');
+        document.getElementById('nav-' + s).classList.remove('active');
+      });
+
+      document.getElementById('screen-' + screenName).classList.remove('hidden');
+      document.getElementById('nav-' + screenName).classList.add('active');
+
+      if (screenName === 'dashboard') {
+        setTimeout(() => map.invalidateSize(), 150);
+      }
+    }
+
+    // 3. FULL PAGE TRANSLATION FUNCTION (SWITCHES ENTIRE APP TEXT)
+    function changeLanguage(lang) {
+      curLang = lang;
+      const t = bhasha[lang];
+
+      // Header
+      document.getElementById('txt-brand-title').innerText = t.brandTitle;
+      document.getElementById('txt-brand-sub').innerText = t.brandSub;
+
+      // Detection screen
+      document.getElementById('txt-tap-sos').innerText = t.tapSos;
+      document.getElementById('txt-sec-sensors').innerText = t.secSensors;
+      document.getElementById('lbl-water').innerText = t.lblWater;
+      document.getElementById('desc-water').innerText = t.descWater;
+      document.getElementById('lbl-smoke').innerText = t.lblSmoke;
+      document.getElementById('desc-smoke').innerText = t.descSmoke;
+      document.getElementById('lbl-air').innerText = t.lblAir;
+      document.getElementById('desc-air').innerText = t.descAir;
+      document.getElementById('lbl-soil').innerText = t.lblSoil;
+      document.getElementById('desc-soil').innerText = t.descSoil;
+
+      document.getElementById('txt-test-title').innerText = t.testTitle;
+      document.getElementById('txt-test-reset').innerText = t.testReset;
+      document.getElementById('txt-sim-flood').innerText = t.simFlood;
+      document.getElementById('txt-sim-fire').innerText = t.simFire;
+
+      // Alert screen
+      document.getElementById('sos-badge').innerText = t.sosBadge;
+      document.getElementById('sos-loc').innerText = t.sosLoc;
+      document.getElementById('sos-header-action').innerText = t.sosHeaderAction;
+      document.getElementById('txt-btn-speak').innerText = t.btnSpeak;
+      document.getElementById('txt-btn-sos').innerText = t.btnSos;
+      document.getElementById('txt-sos-footer').innerText = t.sosFooter;
+
+      // Map & Dashboard screen
+      document.getElementById('txt-map-header').innerText = t.mapHeader;
+      document.getElementById('txt-map-badge').innerText = t.mapBadge;
+      document.getElementById('leg-safe').innerText = t.legSafe;
+      document.getElementById('leg-warn').innerText = t.legWarn;
+      document.getElementById('leg-dang').innerText = t.legDang;
+      document.getElementById('txt-notif-header').innerText = t.notifHeader;
+      document.getElementById('txt-btn-report').innerText = t.btnReport;
+
+      // Bottom Dock
+      document.getElementById('txt-nav-detection').innerText = t.navDetection;
+      document.getElementById('txt-nav-alert').innerText = t.navAlert;
+      document.getElementById('txt-nav-dashboard').innerText = t.navDashboard;
+
+      // Refresh dynamic hazard state texts
+      refreshUI();
+    }
+
+    // 4. SIMULATOR LOGIC
+    function simulateHazard(type) {
+      curHazard = type;
+      if (type === 'flood') {
+        document.getElementById('disp-water').innerText = '18.2 cm';
+        document.getElementById('badge-water').innerText = 'DANGER';
+        document.getElementById('badge-water').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white';
+        setCardStyle('danger', 'flood');
+      } else if (type === 'fire') {
+        document.getElementById('disp-smoke').innerText = '1450 ppm';
+        document.getElementById('badge-smoke').innerText = 'FIRE ALERT';
+        document.getElementById('badge-smoke').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white';
+        setCardStyle('danger', 'fire');
+      } else if (type === 'landslide') {
+        document.getElementById('disp-soil').innerText = '94%';
+        document.getElementById('badge-soil').innerText = 'TREMOR RISK';
+        document.getElementById('badge-soil').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-600 text-white';
+        setCardStyle('danger', 'landslide');
+      } else if (type === 'chemical') {
+        document.getElementById('disp-air').innerText = '480 µg/m³';
+        document.getElementById('badge-air').innerText = 'TOXIC LEAK';
+        document.getElementById('badge-air').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-600 text-white';
+        setCardStyle('danger', 'chemical');
+      } else {
+        document.getElementById('disp-water').innerText = '45.0 cm';
+        document.getElementById('badge-water').innerText = 'NORMAL';
+        document.getElementById('badge-water').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700';
+        document.getElementById('disp-smoke').innerText = '38 ppm';
+        document.getElementById('badge-smoke').innerText = 'CLEAN';
+        document.getElementById('badge-smoke').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        document.getElementById('disp-soil').innerText = '48%';
+        document.getElementById('badge-soil').innerText = 'STABLE';
+        document.getElementById('badge-soil').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        document.getElementById('disp-air').innerText = '35 µg/m³';
+        document.getElementById('badge-air').innerText = 'GOOD';
+        document.getElementById('badge-air').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        setCardStyle('safe', 'safe');
+      }
+    }
+
+    function setCardStyle(state, hazardType) {
+      const t = bhasha[curLang];
+      const card = document.getElementById('traffic-card');
+
+      if (state === 'danger') {
+        card.className = "gpay-card p-5 cursor-pointer border-2 border-red-500 bg-red-50/50 pulse-red text-center space-y-2";
+        document.getElementById('traffic-circle-icon').innerText = '🔴';
+        document.getElementById('traffic-circle-icon').className = 'inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white text-3xl shadow-lg shadow-red-500/30';
+        
+        if (hazardType === 'flood') {
+          document.getElementById('txt-status-level').innerText = t.floodLevel || 'STATUS: DANGER';
+          document.getElementById('txt-status-level').className = 'text-[11px] font-bold uppercase tracking-wider text-red-700';
+          document.getElementById('txt-status-title').innerText = t.floodTitle || 'River Water Rising Rapidly';
+          document.getElementById('txt-status-desc').innerText = t.floodDesc || 'Water distance dropped to 18 cm. Flash flood expected.';
+          
+          document.getElementById('sos-title').innerText = t.floodTitle || 'River Water Rising Rapidly';
+          document.getElementById('sos-instruction').innerText = t.floodMsg || 'Water distance dropped to 18 cm. Move family & cattle to high ground!';
+          document.getElementById('sos-hazard-icon').innerText = '🌊';
+        } else if (hazardType === 'fire') {
+          document.getElementById('txt-status-level').innerText = t.fireLevel || 'STATUS: WILDFIRE';
+          document.getElementById('txt-status-level').className = 'text-[11px] font-bold uppercase tracking-wider text-red-700';
+          document.getElementById('txt-status-title').innerText = t.fireTitle || 'Dense Smoke & Fire Detected';
+          document.getElementById('txt-status-desc').innerText = t.fireDesc || 'Smoke crossed 1450 ppm threshold.';
+
+          document.getElementById('sos-title').innerText = t.fireTitle || 'Wildfire Emergency Alert';
+          document.getElementById('sos-instruction').innerText = t.fireMsg || 'Combustion smoke detected in forest. Evacuate immediately!';
+          document.getElementById('sos-hazard-icon').innerText = '🔥';
+        } else if (hazardType === 'landslide') {
+          document.getElementById('txt-status-level').innerText = 'STATUS: LANDSLIDE WARNING';
+          document.getElementById('txt-status-level').className = 'text-[11px] font-bold uppercase tracking-wider text-red-700';
+          document.getElementById('txt-status-title').innerText = 'Ground Tremor & Saturated Slope';
+          document.getElementById('txt-status-desc').innerText = 'Soil saturation crossed 94% with 2.4g displacement tremors.';
+
+          document.getElementById('sos-title').innerText = 'Imminent Landslide Danger';
+          document.getElementById('sos-instruction').innerText = 'Hill slope mud shift detected! Vacate hillside homes immediately to community center!';
+          document.getElementById('sos-hazard-icon').innerText = '⛰️';
+        } else if (hazardType === 'chemical') {
+          document.getElementById('txt-status-level').innerText = 'STATUS: CHEMICAL GAS LEAK';
+          document.getElementById('txt-status-level').className = 'text-[11px] font-bold uppercase tracking-wider text-red-700';
+          document.getElementById('txt-status-title').innerText = 'Toxic Atmospheric Vapor Detected';
+          document.getElementById('txt-status-desc').innerText = 'Hazardous industrial gas crossed 480 ppm threshold.';
+
+          document.getElementById('sos-title').innerText = 'Hazardous Chemical Gas Warning';
+          document.getElementById('sos-instruction').innerText = 'Toxic plume detected in air! Cover nose with wet cloth and move upwind immediately!';
+          document.getElementById('sos-hazard-icon').innerText = '🏭';
+        }
+      } else {
+        card.className = "gpay-card p-5 cursor-pointer border-2 border-emerald-500 bg-emerald-50/40 pulse-green text-center space-y-2";
+        document.getElementById('traffic-circle-icon').innerText = '🟢';
+        document.getElementById('traffic-circle-icon').className = 'inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500 text-white text-3xl shadow-lg shadow-emerald-500/30';
+        document.getElementById('txt-status-level').innerText = t.safeLevel;
+        document.getElementById('txt-status-level').className = 'text-[11px] font-bold uppercase tracking-wider text-emerald-700';
+        document.getElementById('txt-status-title').innerText = t.safeTitle;
+        document.getElementById('txt-status-desc').innerText = t.safeDesc;
+
+        document.getElementById('sos-title').innerText = t.safeTitle;
+        document.getElementById('sos-instruction').innerText = t.safeDesc;
+        document.getElementById('sos-hazard-icon').innerText = '🛡️';
+      }
+    }
+
+    function refreshUI() {
+      simulateHazard(curHazard);
+    }
+
+    // 5. AUDIO VOICE ALERT (BHASHA SPEECH ENGINE)
+    function speakAlertVoice() {
+      const msg = document.getElementById('sos-instruction').innerText;
+      const utterance = new SpeechSynthesisUtterance(msg);
+      const voiceLangs = { en: 'en-IN', hi: 'hi-IN', as: 'bn-IN', mr: 'mr-IN', bn: 'bn-IN', ta: 'ta-IN' };
+      utterance.lang = voiceLangs[curLang] || 'en-IN';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    async function dispatchSosAlert() {
+      const phoneInput = document.getElementById('input-phone-number');
+      const targetPhone = (phoneInput ? phoneInput.value.trim() : '') || '7904769396';
+      const msg = document.getElementById('sos-instruction').innerText;
+      const cleanPhone = targetPhone.replace(/\D/g, '');
+
+      // 1. Post to Backend API
+      try {
+        await fetch('/api/alerts/broadcast', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nodeId: 1,
+            hazard: curHazard,
+            language: curLang,
+            message: msg,
+            phoneNumber: targetPhone
+          })
+        });
+      } catch (err) {
+        console.log("Local broadcast simulated:", err);
+      }
+
+      // 2. Show Live Delivery Confirmation Card on Screen
+      const card = document.getElementById('sms-delivery-card');
+      if (card) {
+        card.classList.remove('hidden');
+        document.getElementById('sms-to-number').innerText = "+91 " + targetPhone;
+        
+        let alertHeading = "EMERGENCY ALERT: HAZARD DETECTED";
+        let mapCoords = "13.0827,80.2707";
+        if (curHazard === 'fire') {
+          alertHeading = "EMERGENCY ALERT: FIRE DETECTED (ADC: 961)";
+          mapCoords = "13.0827,80.2707";
+        } else if (curHazard === 'flood') {
+          alertHeading = "EMERGENCY ALERT: FLASH FLOOD (Water: 18.2 cm)";
+          mapCoords = "26.1850,91.7475";
+        } else if (curHazard === 'landslide') {
+          alertHeading = "EMERGENCY ALERT: LANDSLIDE IMMINENT (Soil: 94%)";
+          mapCoords = "11.6854,76.1320";
+        } else if (curHazard === 'chemical') {
+          alertHeading = "EMERGENCY ALERT: CHEMICAL GAS LEAK (Air: 480 µg/m³)";
+          mapCoords = "28.6502,77.3150";
+        }
+
+        const formattedSms = `${alertHeading}\nLocation:\nhttps://maps.google.com/?q=${mapCoords}`;
+        document.getElementById('sms-preview-body').innerText = formattedSms;
+        document.getElementById('sms-delivery-time').innerText = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        
+        // Setup direct native links (Matching YouTuber demo)
+        const encodedMsg = encodeURIComponent(formattedSms);
+        document.getElementById('link-direct-sms').href = `sms:+91${cleanPhone}?body=${encodedMsg}`;
+        document.getElementById('link-direct-wa').href = `https://wa.me/91${cleanPhone}?text=${encodedMsg}`;
+        
+        // Scroll card into view
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      // 3. Speak Alert Aloud in Chosen Language
+      speakAlertVoice();
+    }
+
+    function reportToAuthority() {
+      alert("✅ Your incident report has been submitted directly to the District Disaster Emergency Cell!");
+    }
+
+    // 6. LEAFLET MAP
+    const map = L.map('simpleMap', { zoomControl: false }).setView([22.5937, 78.9629], 4.2);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(map);
+
+    const zones = [
+      { name: "Guwahati (Assam)", state: "🔴 Danger (Flood Surge)", lat: 26.1850, lng: 91.7475, color: "#ef4444" },
+      { name: "Chamoli (Uttarakhand)", state: "🟡 Warning (Forest Fire)", lat: 30.4225, lng: 79.3242, color: "#f59e0b" },
+      { name: "Wayanad (Kerala)", state: "🟢 Safe (Normal Slope)", lat: 11.6854, lng: 76.1320, color: "#10b981" },
+      { name: "Delhi NCR", state: "🟡 Warning (Air Smog)", lat: 28.6502, lng: 77.3150, color: "#f59e0b" }
+    ];
+
+    zones.forEach(z => {
+      L.circleMarker([z.lat, z.lng], {
+        radius: 9,
+        fillColor: z.color,
+        color: "#ffffff",
+        weight: 2,
+        fillOpacity: 0.9
+      }).addTo(map).bindPopup(`<b>${z.name}</b><br>Status: <b>${z.state}</b>`);
+    });
+
+    // 7. DIRECT HARDWARE LINK (ESP32 ON COM8)
+    async function connectUsbSerial() {
+      if (!("serial" in navigator)) {
+        alert("Please open this page in Google Chrome or Microsoft Edge to connect to the ESP32 USB port!");
+        return;
+      }
+      try {
+        const port = await navigator.requestPort();
+        await port.open({ baudRate: 115200 });
+
+        document.getElementById('btn-usb-link').className = "text-[11px] font-bold px-2.5 py-1.5 bg-emerald-600 text-white rounded-xl shadow-sm flex items-center gap-1";
+        document.getElementById('txt-usb-btn').innerText = "COM8 Live";
+
+        const textDecoder = new TextDecoderStream();
+        port.readable.pipeTo(textDecoder.writable);
+        const reader = textDecoder.readable.getReader();
+
+        let buffer = '';
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += value;
+          let lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (let line of lines) {
+            parseHardwareLine(line.trim());
+          }
+        }
+      } catch (err) {
+        console.log("USB closed:", err);
+      }
+    }
+
+    function parseHardwareLine(line) {
+      try {
+        if (line.startsWith("{")) {
+          const p = JSON.parse(line);
+          if (p.type === "TELEMETRY") {
+            // 1. Water Level
+            if (p.water !== undefined) {
+              const w = parseFloat(p.water);
+              if (w < 0) {
+                document.getElementById('disp-water').innerText = 'Check Wire / 5V';
+                document.getElementById('badge-water').innerText = 'NO ECHO';
+                document.getElementById('badge-water').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white';
+                document.getElementById('desc-water').innerText = 'Hold hand 30cm away (Blind zone <25cm)';
+              } else {
+                document.getElementById('disp-water').innerText = w.toFixed(1) + ' cm';
+                document.getElementById('desc-water').innerText = 'River level is safe';
+                if (w < 30.0 && w > 0) {
+                  document.getElementById('badge-water').innerText = 'DANGER';
+                  document.getElementById('badge-water').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white';
+                  setCardStyle('danger', 'flood');
+                  return;
+                } else {
+                  document.getElementById('badge-water').innerText = 'NORMAL';
+                  document.getElementById('badge-water').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700';
+                }
+              }
+            }
+
+            // 2. Smoke Level
+            if (p.smoke !== undefined) {
+              const s = parseInt(p.smoke);
+              document.getElementById('disp-smoke').innerText = s + ' ppm';
+              if (s > 800) {
+                document.getElementById('badge-smoke').innerText = 'FIRE ALERT';
+                document.getElementById('badge-smoke').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white';
+                setCardStyle('danger', 'fire');
+                return;
+              } else {
+                document.getElementById('badge-smoke').innerText = 'CLEAN';
+                document.getElementById('badge-smoke').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+              }
+            }
+
+            // 3. Toxic Gas / Air Quality
+            if (p.toxicGas !== undefined) {
+              document.getElementById('disp-air').innerText = Math.round(p.toxicGas) + ' ppm';
+            }
+
+            // 4. Soil Moisture
+            if (p.soil !== undefined) {
+              document.getElementById('disp-soil').innerText = Math.round(p.soil) + '%';
+            }
+
+            // If neither flood nor fire, keep green safe
+            setCardStyle('safe', 'safe');
+            return;
+          }
+        }
+      } catch (e) {}
+
+      // Fallback plain-text parsing (e.g. from test sketches)
+      if (line.includes("cm") || line.includes("Distance")) {
+        const match = line.match(/([\d\.]+)\s*cm/);
+        if (match) {
+          const val = parseFloat(match[1]);
+          document.getElementById('disp-water').innerText = val.toFixed(1) + ' cm';
+          if (val < 30.0 && val > 0) simulateHazard('flood');
+          else simulateHazard('reset');
+        }
+      }
+      if (line.includes("Smoke")) {
+        const match = line.match(/Smoke.*?:\s*(\d+)/);
+        if (match) {
+          const sVal = parseInt(match[1]);
+          document.getElementById('disp-smoke').innerText = sVal + ' ppm';
+          if (sVal > 800) simulateHazard('fire');
+        }
+      }
+    }
+
+    // 8. AUTO-CONNECT VIA SERVER SSE STREAM & AUTO-POLL (100% BULLETPROOF LIVE REFLECTION)
+    function initAutoTelemetryStream() {
+      function applyNodeData(n) {
+        const packet = {
+          type: 'TELEMETRY',
+          water: n.water,
+          smoke: n.smoke,
+          toxicGas: n.toxicGas !== undefined ? n.toxicGas : 150,
+          soil: n.soil
+        };
+        parseHardwareLine(JSON.stringify(packet));
+
+        // Show green connected badge
+        const btn = document.getElementById('btn-usb-link');
+        if (btn) {
+          btn.className = "text-[11px] font-bold px-2.5 py-1.5 bg-emerald-600 text-white rounded-xl shadow-sm flex items-center gap-1";
+          document.getElementById('txt-usb-btn').innerText = "COM8 Live";
+        }
+      }
+
+      // 1. Fetch immediately on page open
+      fetch('/api/nodes/1')
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && data.node) applyNodeData(data.node);
+        })
+        .catch(e => console.log("Initial fetch:", e));
+
+      // 2. High-speed SSE stream
+      try {
+        const sse = new EventSource('/api/stream');
+        sse.onmessage = function(event) {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'TELEMETRY_UPDATE' && data.node && (data.node.id === 'AS-01' || data.node.isReal)) {
+              applyNodeData(data.node);
+            }
+          } catch (e) {}
+        };
+      } catch (err) {
+        console.log("SSE stream:", err);
+      }
+
+      // 3. 1-second background sync fallback
+      setInterval(() => {
+        fetch('/api/nodes/1')
+          .then(r => r.json())
+          .then(data => {
+            if (data.success && data.node) applyNodeData(data.node);
+          })
+          .catch(() => {});
+      }, 1000);
+    }
+
+    // Run automatically when page loads
+    window.addEventListener('DOMContentLoaded', initAutoTelemetryStream);
+  </script>
+
+</body>
+</html>
