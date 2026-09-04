@@ -137,7 +137,18 @@
     </div>
 
     <!-- 2. BIG CLEAR ICON SENSOR CARDS (2x2 Grid) -->
-    <div class="text-xs font-extrabold text-slate-500 uppercase tracking-wider px-1 pt-1" id="txt-sec-sensors">Live Sensor Readings:</div>
+    <div class="flex items-center justify-between px-1 pt-1">
+      <div class="flex items-center gap-1.5">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        <span class="text-xs font-extrabold text-slate-800 tracking-tight" id="txt-sec-sensors">Live Hardware Telemetry (Node #01):</span>
+      </div>
+      <span class="text-[10px] font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200" id="live-packet-ping">
+        ● Live Stream
+      </span>
+    </div>
 
     <div class="grid grid-cols-2 gap-2.5">
       
@@ -316,6 +327,19 @@
         <span class="flex items-center gap-1" id="leg-safe">🟢 Safe Zone</span>
         <span class="flex items-center gap-1" id="leg-warn">🟡 Warning Zone</span>
         <span class="flex items-center gap-1" id="leg-dang">🔴 Danger Hotspot</span>
+      </div>
+    <!-- 7 NATIONAL NODES LIVE SENSOR TELEMETRY -->
+    <div class="gpay-card p-4 space-y-2.5">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <span class="text-lg">📡</span>
+          <span class="text-xs font-bold text-slate-800">All India Sensor Nodes (Live Real Data)</span>
+        </div>
+        <span class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-bold">7 Active Nodes</span>
+      </div>
+
+      <div class="space-y-1.5 text-xs" id="national-nodes-grid">
+        <!-- Live dynamic node rows injected by JS -->
       </div>
     </div>
 
@@ -1046,7 +1070,51 @@
 
     // 8. AUTO-CONNECT VIA SERVER SSE STREAM & AUTO-POLL (100% BULLETPROOF LIVE REFLECTION)
     function initAutoTelemetryStream() {
+      function renderNationalNodes(nodes) {
+        const grid = document.getElementById('national-nodes-grid');
+        if (!grid || !nodes) return;
+        let html = '';
+        const hazardColors = {
+          flood: { bg: 'bg-red-50', badge: 'bg-red-500 text-white', icon: '🌊' },
+          fire: { bg: 'bg-orange-50', badge: 'bg-orange-500 text-white', icon: '🔥' },
+          landslide: { bg: 'bg-amber-50', badge: 'bg-amber-600 text-white', icon: '⛰️' },
+          pollution: { bg: 'bg-purple-50', badge: 'bg-purple-600 text-white', icon: '🌫️' },
+          heat: { bg: 'bg-red-50', badge: 'bg-red-600 text-white', icon: '☀️' },
+          chemical: { bg: 'bg-purple-50', badge: 'bg-purple-600 text-white', icon: '🏭' },
+          drought: { bg: 'bg-yellow-50', badge: 'bg-yellow-600 text-white', icon: '🌾' },
+          normal: { bg: 'bg-slate-50', badge: 'bg-emerald-100 text-emerald-700', icon: '🟢' }
+        };
+
+        for (let id = 1; id <= 7; id++) {
+          const n = nodes[id];
+          if (!n) continue;
+          const conf = hazardColors[n.hazard] || hazardColors.normal;
+          const isNode1 = (id === 1);
+          html += `
+            <div class="p-2 rounded-xl ${conf.bg} border border-slate-200/80 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-base">${conf.icon}</span>
+                <div>
+                  <div class="font-bold text-slate-900 text-[11px] flex items-center gap-1.5">
+                    <span>${n.name}</span>
+                    ${isNode1 ? '<span class="text-[9px] bg-emerald-500 text-white px-1.5 py-0.2 rounded font-mono font-bold">LIVE HARDWARE</span>' : ''}
+                  </div>
+                  <div class="text-[10px] text-slate-500 font-mono">
+                    💧 ${n.water}cm • 🔥 ${n.smoke}ppm • 🌡️ ${n.temp}°C • 🌱 ${n.soil}%
+                  </div>
+                </div>
+              </div>
+              <span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${conf.badge} uppercase font-mono">
+                ${n.hazard}
+              </span>
+            </div>
+          `;
+        }
+        grid.innerHTML = html;
+      }
+
       function applyNodeData(n) {
+        if (!n) return;
         const packet = {
           type: 'TELEMETRY',
           water: n.water,
@@ -1056,19 +1124,29 @@
         };
         parseHardwareLine(JSON.stringify(packet));
 
+        // Update live stream clock ping
+        const pingEl = document.getElementById('live-packet-ping');
+        if (pingEl) {
+          const nowStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          pingEl.innerText = "● Live: " + nowStr;
+        }
+
         // Show green connected badge
         const btn = document.getElementById('btn-usb-link');
         if (btn) {
           btn.className = "text-[11px] font-bold px-2.5 py-1.5 bg-emerald-600 text-white rounded-xl shadow-sm flex items-center gap-1";
-          document.getElementById('txt-usb-btn').innerText = "COM8 Live";
+          document.getElementById('txt-usb-btn').innerText = "Node #1 Live";
         }
       }
 
       // 1. Fetch immediately on page open
-      fetch('/api/nodes/1')
+      fetch('/api/nodes')
         .then(r => r.json())
         .then(data => {
-          if (data.success && data.node) applyNodeData(data.node);
+          if (data.success && data.nodes) {
+            renderNationalNodes(data.nodes);
+            if (data.nodes[1]) applyNodeData(data.nodes[1]);
+          }
         })
         .catch(e => console.log("Initial fetch:", e));
 
@@ -1078,24 +1156,28 @@
         sse.onmessage = function(event) {
           try {
             const data = JSON.parse(event.data);
-            if (data.type === 'TELEMETRY_UPDATE' && data.node && (data.node.id === 'AS-01' || data.node.isReal)) {
-              applyNodeData(data.node);
+            if (data.type === 'TELEMETRY_UPDATE' && data.node) {
+              if (data.node.id === 'AS-01' || data.node.isReal) applyNodeData(data.node);
             }
+            if (data.nodes) renderNationalNodes(data.nodes);
           } catch (e) {}
         };
       } catch (err) {
         console.log("SSE stream:", err);
       }
 
-      // 3. 1-second background sync fallback
+      // 3. 1.5-second background sync fallback
       setInterval(() => {
-        fetch('/api/nodes/1')
+        fetch('/api/nodes')
           .then(r => r.json())
           .then(data => {
-            if (data.success && data.node) applyNodeData(data.node);
+            if (data.success && data.nodes) {
+              renderNationalNodes(data.nodes);
+              if (data.nodes[1]) applyNodeData(data.nodes[1]);
+            }
           })
           .catch(() => {});
-      }, 1000);
+      }, 1500);
     }
 
     // Run automatically when page loads

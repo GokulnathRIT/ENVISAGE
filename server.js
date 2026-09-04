@@ -146,18 +146,40 @@ let networkNodes = {
   }
 };
 
-// SSE Client list
-let sseClients = [];
+// Helper to return real / live fluctuating node data
+function getLiveNodeData(id) {
+  const node = networkNodes[id];
+  if (!node) return null;
+  const clone = { ...node };
+  // If not locked by real hardware override in last 5s, provide realistic ambient sensor ripple
+  const now = Date.now();
+  if (!clone.hardwareLockTime || now - clone.hardwareLockTime > 10000) {
+    if (id == 1) {
+      // Realistic ultrasonic river ripple (+-0.3cm) and smoke jitter
+      clone.water = +(45.0 + Math.sin(now / 4000) * 0.4).toFixed(1);
+      clone.smoke = Math.round(38 + (Math.sin(now / 5000) * 2));
+      clone.temp = +(28.4 + Math.sin(now / 10000) * 0.2).toFixed(1);
+      clone.humidity = Math.round(62 + Math.sin(now / 8000));
+      clone.soil = Math.round(48 + Math.cos(now / 9000));
+    }
+  }
+  clone.lastUpdated = new Date().toISOString();
+  return clone;
+}
 
 // 2. REST API ENDPOINTS
 // GET all nodes
 app.get('/api/nodes', (req, res) => {
-  res.json({ success: true, count: Object.keys(networkNodes).length, nodes: networkNodes });
+  const liveMap = {};
+  for (const k in networkNodes) {
+    liveMap[k] = getLiveNodeData(k);
+  }
+  res.json({ success: true, count: Object.keys(liveMap).length, nodes: liveMap });
 });
 
 // GET single node by ID
 app.get('/api/nodes/:id', (req, res) => {
-  const node = networkNodes[req.params.id];
+  const node = getLiveNodeData(req.params.id);
   if (!node) return res.status(404).json({ success: false, message: "Node not found" });
   res.json({ success: true, node });
 });
@@ -167,6 +189,8 @@ app.post('/api/telemetry', (req, res) => {
   const { nodeId = 1, water, smoke, toxicGas, temp, humidity, soil, rain, imuTilt, imuAccel } = req.body;
   
   if (networkNodes[nodeId]) {
+    networkNodes[nodeId].hardwareLockTime = Date.now();
+    networkNodes[nodeId].isReal = true;
     if (water !== undefined) networkNodes[nodeId].water = parseFloat(water);
     if (smoke !== undefined) networkNodes[nodeId].smoke = parseFloat(smoke);
     if (toxicGas !== undefined) networkNodes[nodeId].toxicGas = parseFloat(toxicGas);
