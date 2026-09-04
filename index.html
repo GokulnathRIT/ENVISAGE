@@ -82,8 +82,11 @@
       <button id="btn-pwa-install" onclick="installPWA()" class="hidden text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-600 text-white shadow-sm flex items-center gap-1 cursor-pointer">
         <span>📲</span> <span>Install App</span>
       </button>
+      <button id="btn-live-gps" onclick="requestLiveLocation()" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 shadow-sm flex items-center gap-1 cursor-pointer" title="Detect device live GPS coordinates">
+        <span>📍</span> <span id="txt-gps-status">Live Location</span>
+      </button>
       <span class="text-[10px] font-bold text-slate-500 font-mono bg-white px-2 py-0.5 rounded-full border border-slate-200">
-        Node #01 • ESP32-S3 Edge-AI
+        Node #01 • ESP32-S3
       </span>
     </div>
   </div>
@@ -317,7 +320,12 @@
           <span class="text-lg">🗺️</span>
           <span class="text-xs font-bold text-slate-800" id="txt-map-header">Regional Hazard Map (India Grid)</span>
         </div>
-        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700" id="txt-map-badge">● 7 Zones Active</span>
+        <div class="flex items-center gap-1.5">
+          <button onclick="requestLiveLocation()" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1 shadow-sm cursor-pointer">
+            <span>🎯</span> <span>Locate Me</span>
+          </button>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700" id="txt-map-badge">● 7 Zones</span>
+        </div>
       </div>
 
       <!-- Leaflet Map Container -->
@@ -897,22 +905,21 @@
         document.getElementById('sms-to-number').innerText = "+91 " + targetPhone;
         
         let alertHeading = "EMERGENCY ALERT: HAZARD DETECTED";
-        let mapCoords = "13.0827,80.2707";
+        let mapCoords = liveGpsActive ? `${liveLat.toFixed(5)},${liveLng.toFixed(5)}` : "13.0827,80.2707";
         if (curHazard === 'fire') {
           alertHeading = "EMERGENCY ALERT: FIRE DETECTED (ADC: 961)";
-          mapCoords = "13.0827,80.2707";
         } else if (curHazard === 'flood') {
           alertHeading = "EMERGENCY ALERT: FLASH FLOOD (Water: 18.2 cm)";
-          mapCoords = "26.1850,91.7475";
+          if (!liveGpsActive) mapCoords = "26.1850,91.7475";
         } else if (curHazard === 'landslide') {
           alertHeading = "EMERGENCY ALERT: LANDSLIDE IMMINENT (Soil: 94%)";
-          mapCoords = "11.6854,76.1320";
+          if (!liveGpsActive) mapCoords = "11.6854,76.1320";
         } else if (curHazard === 'chemical') {
           alertHeading = "EMERGENCY ALERT: CHEMICAL GAS LEAK (Air: 480 µg/m³)";
-          mapCoords = "28.6502,77.3150";
+          if (!liveGpsActive) mapCoords = "28.6502,77.3150";
         }
 
-        const formattedSms = `${alertHeading}\nLocation:\nhttps://maps.google.com/?q=${mapCoords}`;
+        const formattedSms = `${alertHeading}\nLive GPS Pin:\nhttps://maps.google.com/?q=${mapCoords}`;
         document.getElementById('sms-preview-body').innerText = formattedSms;
         document.getElementById('sms-delivery-time').innerText = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         
@@ -933,7 +940,13 @@
       alert("✅ Your incident report has been submitted directly to the District Disaster Emergency Cell!");
     }
 
-    // 6. LEAFLET MAP
+    // ================= 6. LEAFLET MAP & LIVE GPS ENGINE =================
+    let liveLat = 13.0827;
+    let liveLng = 80.2707;
+    let liveGpsActive = false;
+    let userLiveMarker = null;
+    let userLiveAccuracyCircle = null;
+
     const map = L.map('simpleMap', { zoomControl: false }).setView([22.5937, 78.9629], 4.2);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(map);
 
@@ -953,6 +966,92 @@
         fillOpacity: 0.9
       }).addTo(map).bindPopup(`<b>${z.name}</b><br>Status: <b>${z.state}</b>`);
     });
+
+    function requestLiveLocation(silent = false) {
+      if (!("geolocation" in navigator)) {
+        if (!silent) alert("GPS Geolocation is not supported by your browser.");
+        return;
+      }
+      const btn = document.getElementById('btn-live-gps');
+      const statusTxt = document.getElementById('txt-gps-status');
+      if (btn && !silent && statusTxt) {
+        statusTxt.innerText = "Locating...";
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          liveLat = pos.coords.latitude;
+          liveLng = pos.coords.longitude;
+          const accuracy = pos.coords.accuracy || 25;
+          liveGpsActive = true;
+
+          // Update Top Header Badge
+          if (btn) {
+            btn.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-600 text-white shadow-sm flex items-center gap-1 cursor-pointer";
+            if (statusTxt) statusTxt.innerText = `${liveLat.toFixed(2)}°N, ${liveLng.toFixed(2)}°E`;
+          }
+
+          // Update Screen 2 Alert Location String
+          const locEl = document.getElementById('sos-loc');
+          if (locEl) {
+            locEl.innerText = `Location: Live GPS (${liveLat.toFixed(4)}° N, ${liveLng.toFixed(4)}° E) • ±${Math.round(accuracy)}m`;
+          }
+
+          // Update Map Marker
+          if (map) {
+            if (userLiveMarker) map.removeLayer(userLiveMarker);
+            if (userLiveAccuracyCircle) map.removeLayer(userLiveAccuracyCircle);
+
+            userLiveAccuracyCircle = L.circle([liveLat, liveLng], {
+              radius: Math.max(accuracy, 60),
+              color: '#3b82f6',
+              fillColor: '#60a5fa',
+              fillOpacity: 0.18,
+              weight: 1.5
+            }).addTo(map);
+
+            userLiveMarker = L.circleMarker([liveLat, liveLng], {
+              radius: 12,
+              fillColor: '#1d4ed8',
+              color: '#ffffff',
+              weight: 3,
+              fillOpacity: 1
+            }).addTo(map);
+
+            const gmapsUrl = `https://maps.google.com/?q=${liveLat},${liveLng}`;
+            userLiveMarker.bindPopup(`
+              <div style="font-family: sans-serif; font-size: 12px; line-height: 1.4; padding: 2px;">
+                <b style="color: #1d4ed8;">📍 Live Hardware Location (Node #01)</b><br>
+                <b>Latitude:</b> ${liveLat.toFixed(5)}<br>
+                <b>Longitude:</b> ${liveLng.toFixed(5)}<br>
+                <b>GPS Accuracy:</b> ±${Math.round(accuracy)}m<br>
+                <div style="margin-top: 6px;">
+                  <a href="${gmapsUrl}" target="_blank" style="color: #2563eb; font-weight: bold; text-decoration: underline;">
+                    Open in Google Maps ↗
+                  </a>
+                </div>
+              </div>
+            `).openPopup();
+
+            map.flyTo([liveLat, liveLng], 14, { duration: 1.2 });
+          }
+
+          // Update SMS preview link if visible
+          const previewEl = document.getElementById('sms-preview-body');
+          if (previewEl && previewEl.innerText.includes('http')) {
+            previewEl.innerText = previewEl.innerText.replace(/https:\/\/maps\.google\.com\/\?q=[^\s]+/, `https://maps.google.com/?q=${liveLat.toFixed(5)},${liveLng.toFixed(5)}`);
+          }
+        },
+        (err) => {
+          console.log("GPS Location notice:", err.message);
+          if (btn && !silent && statusTxt) {
+            btn.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 shadow-sm flex items-center gap-1 cursor-pointer";
+            statusTxt.innerText = "GPS Offline";
+          }
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 10000 }
+      );
+    }
 
     // 7. DIRECT HARDWARE LINK (ESP32 ON COM8)
     async function connectUsbSerial() {
@@ -1181,7 +1280,10 @@
     }
 
     // Run automatically when page loads
-    window.addEventListener('DOMContentLoaded', initAutoTelemetryStream);
+    window.addEventListener('DOMContentLoaded', () => {
+      initAutoTelemetryStream();
+      setTimeout(() => requestLiveLocation(true), 1200);
+    });
 
     // ================= PWA SERVICE WORKER & APP INSTALL =================
     if ('serviceWorker' in navigator) {
