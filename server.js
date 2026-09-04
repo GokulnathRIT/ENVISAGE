@@ -250,37 +250,35 @@ function broadcastSSE(data) {
   });
 }
 
-// Background simulation for dummy nodes (makes network look actively alive)
-setInterval(() => {
-  for (let id = 2; id <= 7; id++) {
-    const n = networkNodes[id];
-    n.temp = +(n.temp + (Math.random() * 0.2 - 0.1)).toFixed(1);
-    n.lastUpdated = new Date().toISOString();
-  }
-  broadcastSSE({ type: "NETWORK_HEARTBEAT", nodes: networkNodes });
-}, 3000);
+// Start listeners and heartbeat simulation only if run directly (Localhost / Node server)
+if (require.main === module) {
+  // Background simulation for dummy nodes (makes network look actively alive)
+  setInterval(() => {
+    for (let id = 2; id <= 7; id++) {
+      const n = networkNodes[id];
+      n.temp = +(n.temp + (Math.random() * 0.2 - 0.1)).toFixed(1);
+      n.lastUpdated = new Date().toISOString();
+    }
+    broadcastSSE({ type: "NETWORK_HEARTBEAT", nodes: networkNodes });
+  }, 3000);
 
-// Fallback to index.html for frontend routing
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Start listening on 0.0.0.0 (IPv4 + IPv6 everywhere)
-app.listen(PORT, '0.0.0.0', () => {
-  console.log('===========================================================');
-  console.log(`  PRITHVI-RAKSHAK LOCALHOST SERVER ACTIVE!                 `);
-  console.log(`  URL: http://localhost:${PORT}                             `);
-  console.log(`  IP:  http://127.0.0.1:${PORT}                             `);
-  console.log('===========================================================');
-});
-
-// Also listen on backup port 3000 in case port 5000 is blocked
-try {
-  const backupApp = app.listen(3000, '0.0.0.0', () => {
-    console.log(`  Backup URL: http://localhost:3000 (also active!)         `);
+  // Start listening on 0.0.0.0 (IPv4 + IPv6 everywhere)
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log('===========================================================');
+    console.log(`  PRITHVI-RAKSHAK LOCALHOST SERVER ACTIVE!                 `);
+    console.log(`  URL: http://localhost:${PORT}                             `);
+    console.log(`  IP:  http://127.0.0.1:${PORT}                             `);
+    console.log('===========================================================');
   });
-  backupApp.on('error', () => {/* port 3000 in use, ignore */});
-} catch (e) {}
+
+  // Also listen on backup port 3000 in case port 5000 is blocked
+  try {
+    const backupApp = app.listen(3000, '0.0.0.0', () => {
+      console.log(`  Backup URL: http://localhost:3000 (also active!)         `);
+    });
+    backupApp.on('error', () => {/* port 3000 in use, ignore */});
+  } catch (e) {}
+}
 
 module.exports = app;
 
