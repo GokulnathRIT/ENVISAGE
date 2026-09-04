@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prithvi - Village & City Environmental Safety</title>
+
+  <!-- ================= PWA CONFIGURATION ================= -->
+  <meta name="theme-color" content="#1d4ed8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Prithvi">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%231d4ed8'/><text x='50%25' y='65%25' dominant-baseline='middle' text-anchor='middle' font-size='95'>🛡️</text></svg>">
+
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <!-- Leaflet Map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -69,9 +78,14 @@
     <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1 shadow-sm">
       <span>🚀</span> <span>SIH26178 • Space Technology &amp; Qualcomm</span>
     </span>
-    <span class="text-[10px] font-bold text-slate-500 font-mono bg-white px-2 py-0.5 rounded-full border border-slate-200">
-      Node #01 • ESP32-S3 Edge-AI
-    </span>
+    <div class="flex items-center gap-1.5">
+      <button id="btn-pwa-install" onclick="installPWA()" class="hidden text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-600 text-white shadow-sm flex items-center gap-1 cursor-pointer">
+        <span>📲</span> <span>Install App</span>
+      </button>
+      <span class="text-[10px] font-bold text-slate-500 font-mono bg-white px-2 py-0.5 rounded-full border border-slate-200">
+        Node #01 • ESP32-S3 Edge-AI
+      </span>
+    </div>
   </div>
 
   <!-- ================= TOP APP BAR ================= -->
@@ -1086,6 +1100,36 @@
 
     // Run automatically when page loads
     window.addEventListener('DOMContentLoaded', initAutoTelemetryStream);
+
+    // ================= PWA SERVICE WORKER & APP INSTALL =================
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          console.log('[PWA] Service Worker Active!', reg.scope);
+        }).catch(err => console.log('[PWA] SW note:', err));
+      });
+    }
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const btn = document.getElementById('btn-pwa-install');
+      if (btn) btn.classList.remove('hidden');
+    });
+
+    function installPWA() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            const btn = document.getElementById('btn-pwa-install');
+            if (btn) btn.classList.add('hidden');
+          }
+          deferredPrompt = null;
+        });
+      }
+    }
   </script>
 
 </body>
