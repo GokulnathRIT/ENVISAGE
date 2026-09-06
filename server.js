@@ -146,6 +146,9 @@ let networkNodes = {
   }
 };
 
+// SSE Client list
+let sseClients = [];
+
 // Helper to return real / live fluctuating node data
 function getLiveNodeData(id) {
   const node = networkNodes[id];

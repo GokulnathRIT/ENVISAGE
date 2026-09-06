@@ -73,48 +73,41 @@
 </head>
 <body class="pb-24 pt-3 px-3 sm:px-6 max-w-lg mx-auto">
 
-  <!-- ================= SIH26178 OFFICIAL BADGE ================= -->
-  <div class="flex items-center justify-between mb-2 px-1">
-    <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1 shadow-sm">
-      <span>🚀</span> <span>SIH26178 • Space Technology &amp; Qualcomm</span>
-    </span>
-    <div class="flex items-center gap-1.5">
-      <button id="btn-pwa-install" onclick="installPWA()" class="hidden text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-600 text-white shadow-sm flex items-center gap-1 cursor-pointer">
-        <span>📲</span> <span>Install App</span>
-      </button>
-      <button id="btn-live-gps" onclick="requestLiveLocation()" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 shadow-sm flex items-center gap-1 cursor-pointer" title="Detect device live GPS coordinates">
-        <span>📍</span> <span id="txt-gps-status">Live Location</span>
-      </button>
-      <span class="text-[10px] font-bold text-slate-500 font-mono bg-white px-2 py-0.5 rounded-full border border-slate-200">
-        Node #01 • ESP32-S3
-      </span>
-    </div>
-  </div>
-
   <!-- ================= TOP APP BAR ================= -->
   <header class="flex items-center justify-between mb-3 px-1">
-    <div class="flex items-center gap-2">
-      <div class="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-xl shadow-md shadow-blue-500/30">
+    <div class="flex items-center gap-2.5">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-md shadow-blue-500/25">
         🛡️
       </div>
       <div>
         <h1 class="text-base font-extrabold text-slate-900 tracking-tight" id="txt-brand-title">🌍 ENVISAGE AI</h1>
-        <p class="text-[11px] font-semibold text-slate-500" id="txt-brand-sub">Village &amp; City Alert Network</p>
+        <p class="text-[11px] font-semibold text-slate-500 flex items-center gap-1" id="txt-brand-sub">
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Early Warning Sentinel</span>
+        </p>
       </div>
     </div>
 
-    <!-- Quick Language & Hardware Link -->
+    <!-- Quick Actions: GPS, PWA, Language & Node Status -->
     <div class="flex items-center gap-1.5">
-      <select id="lang-select" onchange="changeLanguage(this.value)" class="text-xs font-bold bg-white border border-slate-200 text-slate-700 rounded-xl px-2 py-1.5 shadow-sm outline-none cursor-pointer">
-        <option value="en">English</option>
-        <option value="hi">हिंदी (Hindi)</option>
-        <option value="as">অসমীয়া (Assamese)</option>
-        <option value="mr">मराठी (Marathi)</option>
-        <option value="bn">বাংলা (Bengali)</option>
-        <option value="ta">தமிழ் (Tamil)</option>
+      <button id="btn-live-gps" onclick="requestLiveLocation()" class="text-[10px] font-bold px-2 py-1 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 shadow-sm flex items-center gap-1 cursor-pointer transition-all" title="Detect device live GPS coordinates">
+        <span>📍</span> <span id="txt-gps-status">GPS</span>
+      </button>
+
+      <button id="btn-pwa-install" onclick="installPWA()" class="hidden text-[10px] font-bold px-2 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-1 cursor-pointer transition-all">
+        <span>📲</span> <span>Install</span>
+      </button>
+
+      <select id="lang-select" onchange="changeLanguage(this.value)" class="text-xs font-bold bg-white border border-slate-200 text-slate-700 rounded-xl px-2 py-1 shadow-sm outline-none cursor-pointer">
+        <option value="en">EN</option>
+        <option value="hi">हिंदी</option>
+        <option value="as">অসমীয়া</option>
+        <option value="mr">मराठी</option>
+        <option value="bn">বাংলা</option>
+        <option value="ta">தமிழ்</option>
       </select>
 
-      <button id="btn-usb-link" onclick="connectUsbSerial()" class="text-[11px] font-bold px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-sm flex items-center gap-1">
+      <button id="btn-usb-link" onclick="connectUsbSerial()" class="text-[11px] font-bold px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-sm flex items-center gap-1">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
         <span id="txt-usb-btn">Node #1</span>
       </button>
