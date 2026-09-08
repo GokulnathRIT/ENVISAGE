@@ -107,16 +107,53 @@
         <option value="ta">தமிழ்</option>
       </select>
 
-      <button id="btn-usb-link" onclick="connectUsbSerial()" class="text-[11px] font-bold px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-sm flex items-center gap-1">
+      <button id="btn-usb-link" onclick="openNodeSelectorModal()" class="text-[11px] font-bold px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-sm flex items-center gap-1 cursor-pointer transition-all" title="Click to view & switch between all 20 national nodes">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-        <span id="txt-usb-btn">Node #1</span>
+        <span id="txt-usb-btn">Node #01</span>
       </button>
     </div>
   </header>
 
+  <!-- ================= FLOATING NOTIFICATION TOAST ================= -->
+  <div id="toast-notify" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 transform -translate-y-16 opacity-0 pointer-events-none px-4 py-2 rounded-2xl bg-slate-900/90 backdrop-blur-md text-white font-bold text-xs shadow-2xl flex items-center gap-2 border border-slate-700">
+    <span id="toast-icon">⚡</span>
+    <span id="toast-msg">Node Selected</span>
+  </div>
+
   <!-- ================= SCREEN 1: DETECTION SCREEN (LIVE SENSORS) ================= -->
   <section id="screen-detection" class="space-y-3">
     
+    <!-- 0. ACTIVE SELECTED SENSOR NODE BANNER -->
+    <div id="active-node-banner" class="gpay-card p-3.5 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white shadow-md space-y-2 border border-slate-700/60">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span id="active-node-cat-badge" class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/40 uppercase tracking-wide flex items-center gap-1 font-mono">
+            <span id="active-node-cat-icon">🌊</span> <span id="active-node-cat-name">RIVER FLOOD SENTINEL</span>
+          </span>
+          <span id="active-node-hardware-badge" class="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-emerald-500 text-white">LIVE HARDWARE</span>
+        </div>
+        <button onclick="openNodeSelectorModal()" class="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20 transition-all flex items-center gap-1 cursor-pointer shadow-sm">
+          <span>🔄</span> <span>Switch (20)</span>
+        </button>
+      </div>
+      
+      <div>
+        <h3 class="text-sm font-black tracking-tight text-white flex items-center gap-1.5" id="active-node-name">
+          Node #01: Guwahati River Bank (Assam)
+        </h3>
+        <p class="text-[11px] text-slate-300 flex items-center gap-1 mt-0.5" id="active-node-loc">
+          <span>📍</span> <span id="active-node-loc-text">Brahmaputra Basin, Kamrup, Assam</span>
+        </p>
+      </div>
+
+      <div class="flex items-center justify-between text-[10px] text-slate-300 pt-1.5 border-t border-slate-700/60 font-mono">
+        <span id="active-node-sensor-type" class="truncate max-w-[210px] text-slate-300">⚡ Ultrasonic + Doppler Sensor</span>
+        <a id="active-node-gmaps-link" href="https://maps.google.com/?q=26.1850,91.7475" target="_blank" class="text-blue-300 hover:text-blue-200 underline font-bold flex items-center gap-0.5">
+          <span>📍</span> <span>Maps Pin ↗</span>
+        </a>
+      </div>
+    </div>
+
     <!-- 1. BIG TRAFFIC LIGHT STATUS CARD -->
     <div id="traffic-card" onclick="goToScreen('alert')" class="gpay-card p-5 cursor-pointer border-2 border-emerald-500 bg-emerald-50/40 pulse-green text-center space-y-2">
       <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500 text-white text-3xl shadow-lg shadow-emerald-500/30" id="traffic-circle-icon">
@@ -139,7 +176,7 @@
           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
           <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
         </span>
-        <span class="text-xs font-extrabold text-slate-800 tracking-tight" id="txt-sec-sensors">Live Hardware Telemetry (Node #01):</span>
+        <span class="text-xs font-extrabold text-slate-800 tracking-tight" id="txt-sec-sensors">Live Node Telemetry:</span>
       </div>
       <span class="text-[10px] font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200" id="live-packet-ping">
         ● Live Stream
@@ -148,10 +185,10 @@
 
     <div class="grid grid-cols-2 gap-2.5">
       
-      <!-- Card 1: Water (Flood) -->
-      <div class="gpay-card p-4 space-y-1.5 border-t-4 border-t-blue-500">
+      <!-- Card 1: Primary Parameter (e.g. Water / Smoke / Soil / PM2.5) -->
+      <div id="card-1-box" class="gpay-card p-4 space-y-1.5 border-t-4 border-t-blue-500">
         <div class="flex items-center justify-between">
-          <span class="text-2xl">🌊</span>
+          <span class="text-2xl" id="icon-water">🌊</span>
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700" id="badge-water">NORMAL</span>
         </div>
         <div class="text-xl font-black text-slate-900 font-mono" id="disp-water">45.0 cm</div>
@@ -159,10 +196,10 @@
         <div class="text-[10px] text-slate-500" id="desc-water">River level is safe</div>
       </div>
 
-      <!-- Card 2: Fire & Smoke -->
-      <div class="gpay-card p-4 space-y-1.5 border-t-4 border-t-orange-500">
+      <!-- Card 2: Secondary Parameter (e.g. Flow / Temp / Tilt / PM10) -->
+      <div id="card-2-box" class="gpay-card p-4 space-y-1.5 border-t-4 border-t-orange-500">
         <div class="flex items-center justify-between">
-          <span class="text-2xl">🔥</span>
+          <span class="text-2xl" id="icon-smoke">🔥</span>
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700" id="badge-smoke">CLEAN</span>
         </div>
         <div class="text-xl font-black text-slate-900 font-mono" id="disp-smoke">38 ppm</div>
@@ -170,10 +207,10 @@
         <div class="text-[10px] text-slate-500" id="desc-smoke">No smoke or fire signs</div>
       </div>
 
-      <!-- Card 3: Air & Smog -->
-      <div class="gpay-card p-4 space-y-1.5 border-t-4 border-t-purple-500">
+      <!-- Card 3: Tertiary Parameter (e.g. Rain / Humidity / Vibration / Toxic Gas) -->
+      <div id="card-3-box" class="gpay-card p-4 space-y-1.5 border-t-4 border-t-purple-500">
         <div class="flex items-center justify-between">
-          <span class="text-2xl">🌫️</span>
+          <span class="text-2xl" id="icon-air">🌫️</span>
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700" id="badge-air">GOOD</span>
         </div>
         <div class="text-xl font-black text-slate-900 font-mono" id="disp-air">35 µg/m³</div>
@@ -181,10 +218,10 @@
         <div class="text-[10px] text-slate-500" id="desc-air">Healthy clean air</div>
       </div>
 
-      <!-- Card 4: Soil & Slope -->
-      <div class="gpay-card p-4 space-y-1.5 border-t-4 border-t-emerald-500">
+      <!-- Card 4: Quaternary Parameter (e.g. Soil / CO / Rain / Temp) -->
+      <div id="card-4-box" class="gpay-card p-4 space-y-1.5 border-t-4 border-t-emerald-500">
         <div class="flex items-center justify-between">
-          <span class="text-2xl">🌱</span>
+          <span class="text-2xl" id="icon-soil">🌱</span>
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700" id="badge-soil">STABLE</span>
         </div>
         <div class="text-xl font-black text-slate-900 font-mono" id="disp-soil">48%</div>
@@ -307,39 +344,55 @@
   <section id="screen-dashboard" class="space-y-4 hidden">
     
     <!-- MAP CARD -->
-    <div class="gpay-card p-4 space-y-2">
+    <div class="gpay-card p-4 space-y-2.5">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-1.5">
           <span class="text-lg">🗺️</span>
-          <span class="text-xs font-bold text-slate-800" id="txt-map-header">Regional Hazard Map (India Grid)</span>
+          <span class="text-xs font-bold text-slate-800" id="txt-map-header">Geospatial Hazard Map (India Grid)</span>
         </div>
         <div class="flex items-center gap-1.5">
           <button onclick="requestLiveLocation()" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1 shadow-sm cursor-pointer">
             <span>🎯</span> <span>Locate Me</span>
           </button>
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700" id="txt-map-badge">● 7 Zones</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-mono" id="txt-map-badge">● 20 Nodes</span>
         </div>
+      </div>
+
+      <!-- Map Category Filter Bar -->
+      <div class="flex items-center gap-1 overflow-x-auto pb-1 text-[10px] font-bold no-scrollbar">
+        <button onclick="filterMapAndGrid('all')" id="map-filter-all" class="node-filter-btn active px-2.5 py-1 rounded-xl bg-slate-900 text-white shadow-sm cursor-pointer whitespace-nowrap">All (20)</button>
+        <button onclick="filterMapAndGrid('flood')" id="map-filter-flood" class="node-filter-btn px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-blue-50 text-blue-700 border border-slate-200 cursor-pointer whitespace-nowrap">🌊 Flood (5)</button>
+        <button onclick="filterMapAndGrid('fire')" id="map-filter-fire" class="node-filter-btn px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-orange-50 text-orange-700 border border-slate-200 cursor-pointer whitespace-nowrap">🔥 Fire (5)</button>
+        <button onclick="filterMapAndGrid('landslide')" id="map-filter-landslide" class="node-filter-btn px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-amber-50 text-amber-700 border border-slate-200 cursor-pointer whitespace-nowrap">⛰️ Landslide (5)</button>
+        <button onclick="filterMapAndGrid('pollution')" id="map-filter-pollution" class="node-filter-btn px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-purple-50 text-purple-700 border border-slate-200 cursor-pointer whitespace-nowrap">🌫️ Air &amp; Gas (5)</button>
       </div>
 
       <!-- Leaflet Map Container -->
       <div id="simpleMap" class="h-64 w-full rounded-2xl overflow-hidden border border-slate-200"></div>
 
-      <div class="flex items-center justify-around text-[10px] font-bold pt-1 text-slate-600">
-        <span class="flex items-center gap-1" id="leg-safe">🟢 Safe Zone</span>
-        <span class="flex items-center gap-1" id="leg-warn">🟡 Warning Zone</span>
-        <span class="flex items-center gap-1" id="leg-dang">🔴 Danger Hotspot</span>
+      <div class="flex items-center justify-around text-[10px] font-bold pt-1 text-slate-600 flex-wrap gap-1">
+        <span class="flex items-center gap-1" id="leg-safe">🟢 Safe</span>
+        <span class="flex items-center gap-1" id="leg-warn">🟡 Warning</span>
+        <span class="flex items-center gap-1" id="leg-dang">🔴 Danger</span>
+        <span class="text-slate-400 font-mono text-[9px]">(Tap any pin to select)</span>
       </div>
-    <!-- 7 NATIONAL NODES LIVE SENSOR TELEMETRY -->
+    </div>
+
+    <!-- 20 NATIONAL NODES LIVE SENSOR TELEMETRY -->
     <div class="gpay-card p-4 space-y-2.5">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-1.5">
           <span class="text-lg">📡</span>
-          <span class="text-xs font-bold text-slate-800">All India Sensor Nodes (Live Real Data)</span>
+          <span class="text-xs font-bold text-slate-800">All India Multi-Hazard Nodes</span>
         </div>
-        <span class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-bold">7 Active Nodes</span>
+        <span class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-bold" id="badge-nodes-count">20 Active Nodes</span>
       </div>
+      
+      <p class="text-[11px] text-slate-500 font-medium leading-tight">
+        Touch any node below to inspect its unique sensor suite &amp; target emergency alerts:
+      </p>
 
-      <div class="space-y-1.5 text-xs" id="national-nodes-grid">
+      <div class="space-y-2 text-xs" id="national-nodes-grid">
         <!-- Live dynamic node rows injected by JS -->
       </div>
     </div>
@@ -376,6 +429,51 @@
     </div>
 
   </section>
+
+  <!-- ================= 20 NODES QUICK SELECTION MODAL ================= -->
+  <div id="node-selector-modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-2 sm:p-4 transition-all">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 overflow-hidden max-h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Modal Header -->
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/90">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+            📡
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-slate-900">Select Geospatial Node</h3>
+            <p class="text-[10px] text-slate-500 font-medium">20 Real-Time Sentinel Nodes Across India</p>
+          </div>
+        </div>
+        <button onclick="closeNodeSelectorModal()" class="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold flex items-center justify-center text-sm cursor-pointer transition-all">
+          ✕
+        </button>
+      </div>
+
+      <!-- Category Filter Pills inside Modal -->
+      <div class="p-2.5 border-b border-slate-100 bg-white flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+        <button onclick="filterModalNodes('all')" id="modal-tab-all" class="modal-tab-btn active text-[10px] font-bold px-2.5 py-1 rounded-xl bg-slate-900 text-white cursor-pointer whitespace-nowrap shadow-sm">All (20)</button>
+        <button onclick="filterModalNodes('flood')" id="modal-tab-flood" class="modal-tab-btn text-[10px] font-bold px-2.5 py-1 rounded-xl bg-slate-100 text-blue-700 border border-slate-200 cursor-pointer whitespace-nowrap">🌊 Flood (5)</button>
+        <button onclick="filterModalNodes('fire')" id="modal-tab-fire" class="modal-tab-btn text-[10px] font-bold px-2.5 py-1 rounded-xl bg-slate-100 text-orange-700 border border-slate-200 cursor-pointer whitespace-nowrap">🔥 Fire (5)</button>
+        <button onclick="filterModalNodes('landslide')" id="modal-tab-landslide" class="modal-tab-btn text-[10px] font-bold px-2.5 py-1 rounded-xl bg-slate-100 text-amber-700 border border-slate-200 cursor-pointer whitespace-nowrap">⛰️ Landslide (5)</button>
+        <button onclick="filterModalNodes('pollution')" id="modal-tab-pollution" class="modal-tab-btn text-[10px] font-bold px-2.5 py-1 rounded-xl bg-slate-100 text-purple-700 border border-slate-200 cursor-pointer whitespace-nowrap">🌫️ Air (5)</button>
+      </div>
+
+      <!-- Scrollable 20 Nodes Grid -->
+      <div class="p-3 overflow-y-auto space-y-2 flex-1" id="modal-nodes-list">
+        <!-- Live dynamic node rows injected by JS -->
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-[11px]">
+        <span class="text-slate-500 font-medium">💡 Tap any node to switch dashboard &amp; SOS alerts.</span>
+        <button onclick="closeNodeSelectorModal()" class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer shadow-sm">
+          Done
+        </button>
+      </div>
+
+    </div>
+  </div>
 
   <!-- ================= FIXED BOTTOM GPAY 3-BUTTON DOCK ================= -->
   <nav class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white/95 backdrop-blur-md border-t border-slate-200 py-1.5 px-4 flex items-center justify-around z-50 shadow-lg">
@@ -933,32 +1031,624 @@
       alert("✅ Your incident report has been submitted directly to the District Disaster Emergency Cell!");
     }
 
-    // ================= 6. LEAFLET MAP & LIVE GPS ENGINE =================
+    // ================= 6. 20 GEOSPATIAL NODES & INTERACTIVE SELECTION SYSTEM =================
+    let activeNodeId = 1;
+    let allNodesCache = {};
+    let activeFilterCategory = 'all';
+    let modalFilterCategory = 'all';
+    let mapMarkers = [];
+    let mapInitialized = false;
+
     let liveLat = 13.0827;
     let liveLng = 80.2707;
     let liveGpsActive = false;
     let userLiveMarker = null;
     let userLiveAccuracyCircle = null;
+    let toastTimeout = null;
 
+    const hazardCategoryMeta = {
+      flood: {
+        name: "River Flood Sentinel",
+        icon: "🌊",
+        color: "#2563eb",
+        bgClass: "bg-blue-50/70 border-blue-200",
+        badgeClass: "bg-blue-500 text-white"
+      },
+      fire: {
+        name: "Wildfire & Smoke Sentinel",
+        icon: "🔥",
+        color: "#ea580c",
+        bgClass: "bg-orange-50/70 border-orange-200",
+        badgeClass: "bg-orange-500 text-white"
+      },
+      landslide: {
+        name: "Landslide Slope Sentinel",
+        icon: "⛰️",
+        color: "#d97706",
+        bgClass: "bg-amber-50/70 border-amber-200",
+        badgeClass: "bg-amber-600 text-white"
+      },
+      pollution: {
+        name: "Toxic Air & Gas Sentinel",
+        icon: "🌫️",
+        color: "#9333ea",
+        bgClass: "bg-purple-50/70 border-purple-200",
+        badgeClass: "bg-purple-600 text-white"
+      }
+    };
+
+    function showToast(msg, icon = '⚡') {
+      const toast = document.getElementById('toast-notify');
+      const iconEl = document.getElementById('toast-icon');
+      const msgEl = document.getElementById('toast-msg');
+      if (!toast) return;
+      if (iconEl) iconEl.innerText = icon;
+      if (msgEl) msgEl.innerText = msg;
+      toast.classList.remove('-translate-y-16', 'opacity-0', 'pointer-events-none');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('-translate-y-16', 'opacity-0', 'pointer-events-none');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 2200);
+    }
+
+    function openNodeSelectorModal() {
+      const modal = document.getElementById('node-selector-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        renderModalNodes(allNodesCache);
+      }
+    }
+
+    function closeNodeSelectorModal() {
+      const modal = document.getElementById('node-selector-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function filterModalNodes(cat) {
+      modalFilterCategory = cat;
+      ['all', 'flood', 'fire', 'landslide', 'pollution'].forEach(c => {
+        const btn = document.getElementById('modal-tab-' + c);
+        if (btn) {
+          if (c === cat) {
+            btn.className = "modal-tab-btn active text-[10px] font-bold px-2.5 py-1 rounded-xl bg-slate-900 text-white cursor-pointer whitespace-nowrap shadow-sm";
+          } else {
+            btn.className = "modal-tab-btn text-[10px] font-bold px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 cursor-pointer whitespace-nowrap";
+          }
+        }
+      });
+      renderModalNodes(allNodesCache);
+    }
+
+    function filterMapAndGrid(cat) {
+      activeFilterCategory = cat;
+      ['all', 'flood', 'fire', 'landslide', 'pollution'].forEach(c => {
+        const btn = document.getElementById('map-filter-' + c);
+        if (btn) {
+          if (c === cat) {
+            btn.className = "node-filter-btn active px-2.5 py-1 rounded-xl bg-slate-900 text-white shadow-sm cursor-pointer whitespace-nowrap";
+          } else {
+            btn.className = "node-filter-btn px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer whitespace-nowrap";
+          }
+        }
+      });
+
+      mapMarkers.forEach(item => {
+        if (cat === 'all' || item.category === cat) {
+          if (!map.hasLayer(item.marker)) map.addLayer(item.marker);
+        } else {
+          if (map.hasLayer(item.marker)) map.removeLayer(item.marker);
+        }
+      });
+
+      renderNationalNodes(allNodesCache);
+    }
+
+    function getTelemetrySummaryString(n) {
+      if (!n) return '';
+      if (n.category === 'flood') {
+        return `💧 Water: ${n.water}cm • 🌊 Flow: ${n.flowRate || 2.4}m/s • 🌧️ Rain: ${n.rain || 0}mm/h • 🌱 Soil: ${n.soil}%`;
+      } else if (n.category === 'fire') {
+        return `🔥 Smoke: ${n.smoke}ppm • 🌡️ Temp: ${n.temp}°C • 💨 Hum: ${n.humidity}% • ⚠️ CO: ${n.coPpm || 10}ppm`;
+      } else if (n.category === 'landslide') {
+        return `🌱 Soil: ${n.soil}% • 📐 Tilt: ${n.imuTilt || 0.2}° • 📳 Accel: ${n.imuAccel || 0.98}g • 🌧️ Rain: ${n.rain || 0}mm/h`;
+      } else if (n.category === 'pollution') {
+        return `🌫️ PM2.5: ${n.pm25}µg/m³ • 🏭 PM10: ${n.pm10}µg/m³ • ☣️ Gas: ${n.toxicGas}ppm • 🌡️ ${n.temp}°C`;
+      }
+      return `⚡ Multi-Sensor Telemetry OK`;
+    }
+
+    function updateDetectionCardsForNode(node) {
+      if (!node) return;
+      const cat = node.category || 'flood';
+
+      if (cat === 'flood') {
+        // Card 1: Water Clearance
+        document.getElementById('icon-water').innerText = '🌊';
+        document.getElementById('lbl-water').innerText = 'Water Distance (River)';
+        document.getElementById('disp-water').innerText = (node.water !== undefined ? node.water.toFixed(1) : '45.0') + ' cm';
+        const isDanger = (node.water < 30.0 && node.water > 0) || node.hazard === 'critical';
+        document.getElementById('badge-water').innerText = isDanger ? 'DANGER' : (node.hazard === 'warning' ? 'WARNING' : 'NORMAL');
+        document.getElementById('badge-water').className = isDanger ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white animate-pulse' : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700';
+        document.getElementById('desc-water').innerText = isDanger ? 'River crest threshold breached!' : 'River clearance within safe range';
+
+        // Card 2: Stream Flow Velocity
+        document.getElementById('icon-smoke').innerText = '🌊';
+        document.getElementById('lbl-smoke').innerText = 'Stream Flow Velocity';
+        document.getElementById('disp-smoke').innerText = (node.flowRate ? node.flowRate.toFixed(1) : '2.4') + ' m/s';
+        document.getElementById('badge-smoke').innerText = (node.flowRate > 3.5) ? 'HIGH SURGE' : 'STEADY';
+        document.getElementById('badge-smoke').className = (node.flowRate > 3.5) ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500 text-white' : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        document.getElementById('desc-smoke').innerText = 'Doppler acoustic flow velocity';
+
+        // Card 3: Rainfall Intensity
+        document.getElementById('icon-air').innerText = '🌧️';
+        document.getElementById('lbl-air').innerText = 'Rainfall Intensity';
+        document.getElementById('disp-air').innerText = (node.rain !== undefined ? node.rain.toFixed(1) : '0.0') + ' mm/h';
+        document.getElementById('badge-air').innerText = (node.rain > 20) ? 'HEAVY RAIN' : 'NORMAL';
+        document.getElementById('badge-air').className = (node.rain > 20) ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white' : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        document.getElementById('desc-air').innerText = 'Catchment precipitation rate';
+
+        // Card 4: Embankment Soil
+        document.getElementById('icon-soil').innerText = '🌱';
+        document.getElementById('lbl-soil').innerText = 'Embankment Soil';
+        document.getElementById('disp-soil').innerText = (node.soil || 48) + '%';
+        document.getElementById('badge-soil').innerText = (node.soil > 85) ? 'SATURATED' : 'FIRM';
+        document.getElementById('badge-soil').className = (node.soil > 85) ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white' : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        document.getElementById('desc-soil').innerText = 'Dike bank stability index';
+
+      } else if (cat === 'fire') {
+        // Card 1: Optical Smoke
+        document.getElementById('icon-water').innerText = '🔥';
+        document.getElementById('lbl-water').innerText = 'Combustion Smoke';
+        document.getElementById('disp-water').innerText = (node.smoke || 35) + ' ppm';
+        const isFire = (node.smoke > 800) || node.hazard === 'critical';
+        document.getElementById('badge-water').innerText = isFire ? 'FIRE SPIKE' : (node.smoke > 200 ? 'HAZE' : 'CLEAN');
+        document.getElementById('badge-water').className = isFire ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-600 text-white animate-pulse' : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        document.getElementById('desc-water').innerText = isFire ? 'Dense combustion particulate detected' : 'Canopy air clear of smoke';
+
+        // Card 2: Canopy Thermal Temp
+        document.getElementById('icon-smoke').innerText = '🌡️';
+        document.getElementById('lbl-smoke').innerText = 'Canopy Thermal Temp';
+        document.getElementById('disp-smoke').innerText = (node.temp ? node.temp.toFixed(1) : '32.0') + ' °C';
+        document.getElementById('badge-smoke').innerText = (node.temp > 42) ? 'HEATWAVE' : 'NOMINAL';
+        document.getElementById('badge-smoke').className = (node.temp > 42) ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white' : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        document.getElementById('desc-smoke').innerText = 'Infrared thermal array sensor';
+
+        // Card 3: Relative Humidity
+        document.getElementById('icon-air').innerText = '💨';
+        document.getElementById('lbl-air').innerText = 'Relative Humidity';
+        document.getElementById('disp-air').innerText = (node.humidity || 45) + '%';
+        document.getElementById('badge-air').innerText = (node.humidity < 20) ? 'DRY TINDER' : 'OPTIMAL';
+        document.getElementById('badge-air').className = (node.humidity < 20) ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-600 text-white' : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        document.getElementById('desc-air').innerText = 'Wildfire ignition risk factor';
+
+        // Card 4: Carbon Monoxide (CO)
+        document.getElementById('icon-soil').innerText = '⚠️';
+        document.getElementById('lbl-soil').innerText = 'Carbon Monoxide (CO)';
+        document.getElementById('disp-soil').innerText = (node.coPpm || 12) + ' ppm';
+        document.getElementById('badge-soil').innerText = (node.coPpm > 50) ? 'TOXIC GAS' : 'TRACE';
+        document.getElementById('badge-soil').className = (node.coPpm > 50) ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white' : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        document.getElementById('desc-soil').innerText = 'Electrochemical combustion gas';
+
+      } else if (cat === 'landslide') {
+        // Card 1: Soil Pore Moisture
+        document.getElementById('icon-water').innerText = '🌱';
+        document.getElementById('lbl-water').innerText = 'Soil Pore Moisture';
+        document.getElementById('disp-water').innerText = (node.soil || 45) + '%';
+        const isSaturated = (node.soil > 85) || node.hazard === 'critical';
+        document.getElementById('badge-water').innerText = isSaturated ? 'LIQUEFACTION RISK' : 'STABLE';
+        document.getElementById('badge-water').className = isSaturated ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-600 text-white animate-pulse' : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        document.getElementById('desc-water').innerText = isSaturated ? 'Subsurface pore pressure high!' : 'Subsurface slope soil stable';
+
+        // Card 2: Hill Slope Incline Shift
+        document.getElementById('icon-smoke').innerText = '📐';
+        document.getElementById('lbl-smoke').innerText = 'Slope Incline Shift';
+        document.getElementById('disp-smoke').innerText = (node.imuTilt !== undefined ? node.imuTilt.toFixed(1) : '0.2') + '°';
+        document.getElementById('badge-smoke').innerText = (node.imuTilt > 2.0) ? 'SLOPE CREEP' : 'ZERO TILT';
+        document.getElementById('badge-smoke').className = (node.imuTilt > 2.0) ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white' : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        document.getElementById('desc-smoke').innerText = '6-Axis IMU inclinometer';
+
+        // Card 3: Micro-Seismic Tremor
+        document.getElementById('icon-air').innerText = '📳';
+        document.getElementById('lbl-air').innerText = 'Micro-Seismic Tremor';
+        document.getElementById('disp-air').innerText = (node.imuAccel !== undefined ? node.imuAccel.toFixed(2) : '0.98') + ' g';
+        document.getElementById('badge-air').innerText = (node.imuAccel > 1.3) ? 'SHOCK DETECTED' : 'QUIET';
+        document.getElementById('badge-air').className = (node.imuAccel > 1.3) ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-600 text-white' : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        document.getElementById('desc-air').innerText = 'Piezoelectric geophone probe';
+
+        // Card 4: Rain Infiltration Rate
+        document.getElementById('icon-soil').innerText = '🌧️';
+        document.getElementById('lbl-soil').innerText = 'Rain Infiltration Rate';
+        document.getElementById('disp-soil').innerText = (node.rain !== undefined ? node.rain.toFixed(1) : '0.0') + ' mm/h';
+        document.getElementById('badge-soil').innerText = (node.rain > 30) ? 'DELUGE' : 'LOW';
+        document.getElementById('badge-soil').className = (node.rain > 30) ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white' : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        document.getElementById('desc-soil').innerText = 'Hillface precipitation rate';
+
+      } else if (cat === 'pollution') {
+        // Card 1: PM2.5 Fine Dust
+        document.getElementById('icon-water').innerText = '🌫️';
+        document.getElementById('lbl-water').innerText = 'Fine Particulate PM2.5';
+        document.getElementById('disp-water').innerText = (node.pm25 || 65) + ' µg/m³';
+        const isSevere = (node.pm25 > 250) || node.hazard === 'critical';
+        document.getElementById('badge-water').innerText = isSevere ? 'SEVERE' : (node.pm25 > 100 ? 'POOR' : 'GOOD');
+        document.getElementById('badge-water').className = isSevere ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-700 text-white animate-pulse' : (node.pm25 > 100 ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white' : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700');
+        document.getElementById('desc-water').innerText = isSevere ? 'N95 respirator mask mandatory' : 'Air quality within safety standards';
+
+        // Card 2: PM10 Inhalable Dust
+        document.getElementById('icon-smoke').innerText = '🏭';
+        document.getElementById('lbl-smoke').innerText = 'Inhalable Dust PM10';
+        document.getElementById('disp-smoke').innerText = (node.pm10 || 110) + ' µg/m³';
+        document.getElementById('badge-smoke').innerText = (node.pm10 > 300) ? 'CRITICAL' : 'MODERATE';
+        document.getElementById('badge-smoke').className = (node.pm10 > 300) ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-600 text-white' : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        document.getElementById('desc-smoke').innerText = 'Laser optical particle counter';
+
+        // Card 3: Toxic Gas / VOC
+        document.getElementById('icon-air').innerText = '☣️';
+        document.getElementById('lbl-air').innerText = 'Toxic Gas / VOC';
+        document.getElementById('disp-air').innerText = (node.toxicGas || 45) + ' ppm';
+        document.getElementById('badge-air').innerText = (node.toxicGas > 100) ? 'TOXIC LEAK' : 'TRACE';
+        document.getElementById('badge-air').className = (node.toxicGas > 100) ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-600 text-white' : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+        document.getElementById('desc-air').innerText = 'MQ-135 electrochemical array';
+
+        // Card 4: Ambient Temp
+        document.getElementById('icon-soil').innerText = '🌡️';
+        document.getElementById('lbl-soil').innerText = 'Ambient Temperature';
+        document.getElementById('disp-soil').innerText = (node.temp ? node.temp.toFixed(1) : '29.0') + ' °C';
+        document.getElementById('badge-soil').innerText = 'NORMAL';
+        document.getElementById('badge-soil').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700';
+        document.getElementById('desc-soil').innerText = 'Industrial ambient weather station';
+      }
+    }
+
+    function setCardForNodeHazard(node) {
+      const card = document.getElementById('traffic-card');
+      const icon = document.getElementById('traffic-circle-icon');
+      const level = document.getElementById('txt-status-level');
+      const title = document.getElementById('txt-status-title');
+      const desc = document.getElementById('txt-status-desc');
+      if (!card) return;
+
+      if (node.hazard === 'critical') {
+        card.className = "gpay-card p-5 cursor-pointer border-2 border-red-500 bg-red-50/50 pulse-red text-center space-y-2";
+        if (icon) {
+          icon.innerText = '🔴';
+          icon.className = 'inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white text-3xl shadow-lg shadow-red-500/30';
+        }
+        if (level) {
+          level.innerText = `STATUS: CRITICAL ${node.categoryLabel.toUpperCase()} HAZARD`;
+          level.className = 'text-[11px] font-bold uppercase tracking-wider text-red-700';
+        }
+        if (title) title.innerText = `Danger: Immediate Warning at ${node.name}`;
+        if (desc) desc.innerText = `High risk threshold breached. Tap to inspect emergency SOS instructions and dispatch alerts.`;
+      } else if (node.hazard === 'warning') {
+        card.className = "gpay-card p-5 cursor-pointer border-2 border-amber-500 bg-amber-50/40 text-center space-y-2";
+        if (icon) {
+          icon.innerText = '🟡';
+          icon.className = 'inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500 text-white text-3xl shadow-lg shadow-amber-500/30';
+        }
+        if (level) {
+          level.innerText = `STATUS: WATCH / WARNING (${node.categoryLabel.toUpperCase()})`;
+          level.className = 'text-[11px] font-bold uppercase tracking-wider text-amber-700';
+        }
+        if (title) title.innerText = `Heightened Activity at ${node.name}`;
+        if (desc) desc.innerText = `Sensors indicate elevated levels above baseline. Sentinel team monitoring stream.`;
+      } else {
+        card.className = "gpay-card p-5 cursor-pointer border-2 border-emerald-500 bg-emerald-50/40 pulse-green text-center space-y-2";
+        if (icon) {
+          icon.innerText = '🟢';
+          icon.className = 'inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500 text-white text-3xl shadow-lg shadow-emerald-500/30';
+        }
+        if (level) {
+          level.innerText = `STATUS: SAFE / NORMAL (सुरक्षित)`;
+          level.className = 'text-[11px] font-bold uppercase tracking-wider text-emerald-700';
+        }
+        if (title) title.innerText = `All Conditions Stable (${node.name})`;
+        if (desc) desc.innerText = `All multi-hazard parameters are within safe environmental limits.`;
+      }
+    }
+
+    function updateSosScreenForNode(node) {
+      if (!node) return;
+      const meta = hazardCategoryMeta[node.category] || hazardCategoryMeta.flood;
+      
+      const locEl = document.getElementById('sos-loc');
+      if (locEl) {
+        locEl.innerText = `Location: ${node.name} (${node.location}, ${node.state}) • GPS: ${node.lat.toFixed(4)}° N, ${node.lng.toFixed(4)}° E`;
+      }
+
+      const iconEl = document.getElementById('sos-hazard-icon');
+      if (iconEl) iconEl.innerText = meta.icon;
+
+      const titleEl = document.getElementById('sos-title');
+      const badgeEl = document.getElementById('sos-badge');
+      const instrEl = document.getElementById('sos-instruction');
+
+      let alertHeading = "EMERGENCY ALERT: HAZARD DETECTED";
+      let instrText = "";
+
+      if (node.hazard === 'critical') {
+        if (badgeEl) {
+          badgeEl.innerText = "CRITICAL WARNING";
+          badgeEl.className = "text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-500 text-white font-mono";
+        }
+      } else if (node.hazard === 'warning') {
+        if (badgeEl) {
+          badgeEl.innerText = "WATCH WARNING";
+          badgeEl.className = "text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500 text-white font-mono";
+        }
+      } else {
+        if (badgeEl) {
+          badgeEl.innerText = "STANDBY / SAFE";
+          badgeEl.className = "text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-600 text-white font-mono";
+        }
+      }
+
+      if (node.category === 'flood') {
+        alertHeading = `EMERGENCY ALERT: RIVER FLOOD (${node.name})`;
+        instrText = `River water clearance dropped to ${node.water} cm with river flow velocity at ${node.flowRate || 2.4} m/s. Move family, children, and livestock to higher school grounds immediately!`;
+        if (titleEl) titleEl.innerText = "River Flood & Crest Surge Imminent";
+      } else if (node.category === 'fire') {
+        alertHeading = `EMERGENCY ALERT: WILDFIRE (${node.name})`;
+        instrText = `Forest canopy thermal flare detected! Smoke particulate at ${node.smoke} ppm with ambient canopy heat at ${node.temp}°C. Move away from forest ridges immediately!`;
+        if (titleEl) titleEl.innerText = "Wildfire & High Smoke Outbreak";
+      } else if (node.category === 'landslide') {
+        alertHeading = `EMERGENCY ALERT: LANDSLIDE RISK (${node.name})`;
+        instrText = `Slope saturation at ${node.soil}% with tilt angle ${node.imuTilt || 0.4}°. Hillside mud displacement imminent! Vacate slope homes immediately!`;
+        if (titleEl) titleEl.innerText = "Hillside Soil Liquefaction & Creep";
+      } else if (node.category === 'pollution') {
+        alertHeading = `EMERGENCY ALERT: TOXIC SMOG (${node.name})`;
+        instrText = `Hazardous air quality detected! PM2.5 at ${node.pm25} µg/m³ and toxic VOC gas at ${node.toxicGas || 45} ppm. Wear N95 respirator masks and seal doors immediately!`;
+        if (titleEl) titleEl.innerText = "Hazardous Air Pollution & Gas Plume";
+      }
+
+      if (instrEl) instrEl.innerText = instrText;
+
+      const phoneInput = document.getElementById('input-phone-number');
+      const targetPhone = (phoneInput ? phoneInput.value.trim() : '') || '7904769396';
+      const cleanPhone = targetPhone.replace(/\D/g, '');
+      const mapCoords = `${node.lat.toFixed(5)},${node.lng.toFixed(5)}`;
+      const formattedSms = `🚨 ENVISAGE AI ALERT: ${alertHeading}\n${instrText}\nLive GPS Pin:\nhttps://maps.google.com/?q=${mapCoords}`;
+
+      const smsPreview = document.getElementById('sms-preview-body');
+      if (smsPreview) smsPreview.innerText = formattedSms;
+
+      const encodedMsg = encodeURIComponent(formattedSms);
+      const linkSms = document.getElementById('link-direct-sms');
+      if (linkSms) linkSms.href = `sms:+91${cleanPhone}?body=${encodedMsg}`;
+      const linkWa = document.getElementById('link-direct-wa');
+      if (linkWa) linkWa.href = `https://wa.me/91${cleanPhone}?text=${encodedMsg}`;
+    }
+
+    function selectActiveNode(id, switchScreen = true) {
+      activeNodeId = parseInt(id);
+      const node = allNodesCache[activeNodeId];
+      if (!node) return;
+
+      closeNodeSelectorModal();
+
+      // 1. Update Active Node Banner
+      const meta = hazardCategoryMeta[node.category] || hazardCategoryMeta.flood;
+      const catIconEl = document.getElementById('active-node-cat-icon');
+      const catNameEl = document.getElementById('active-node-cat-name');
+      if (catIconEl) catIconEl.innerText = meta.icon;
+      if (catNameEl) catNameEl.innerText = meta.name.toUpperCase();
+
+      const hwBadge = document.getElementById('active-node-hardware-badge');
+      if (hwBadge) {
+        if (activeNodeId === 1 || node.isReal) {
+          hwBadge.innerText = "LIVE HARDWARE";
+          hwBadge.className = "text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-emerald-500 text-white";
+        } else {
+          hwBadge.innerText = `EDGE NODE #${activeNodeId}`;
+          hwBadge.className = "text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-blue-600 text-white";
+        }
+      }
+
+      const nameEl = document.getElementById('active-node-name');
+      if (nameEl) nameEl.innerText = `Node #${activeNodeId < 10 ? '0' + activeNodeId : activeNodeId}: ${node.name}`;
+
+      const locText = document.getElementById('active-node-loc-text');
+      if (locText) locText.innerText = `${node.location} (${node.state})`;
+
+      const sensorType = document.getElementById('active-node-sensor-type');
+      if (sensorType) sensorType.innerText = `⚡ ${node.primarySensor || 'Autonomous Multi-Hazard Sensor Array'}`;
+
+      const gmapsLink = document.getElementById('active-node-gmaps-link');
+      if (gmapsLink) gmapsLink.href = `https://maps.google.com/?q=${node.lat},${node.lng}`;
+
+      // 2. Update Top Header Button
+      const headerBtnTxt = document.getElementById('txt-usb-btn');
+      if (headerBtnTxt) {
+        headerBtnTxt.innerText = `Node #${activeNodeId < 10 ? '0' + activeNodeId : activeNodeId}`;
+      }
+
+      // 3. Update Detection 4 Cards according to node's category
+      updateDetectionCardsForNode(node);
+
+      // 4. Update Big Traffic Light Status Card
+      setCardForNodeHazard(node);
+
+      // 5. Update Alert / SOS Screen
+      updateSosScreenForNode(node);
+
+      // 6. Highlight in National Nodes Grid
+      renderNationalNodes(allNodesCache);
+
+      // 7. Focus on Map
+      if (map && node.lat && node.lng) {
+        map.flyTo([node.lat, node.lng], 9, { duration: 1.0 });
+        const match = mapMarkers.find(m => m.id === activeNodeId);
+        if (match && match.marker) {
+          setTimeout(() => match.marker.openPopup(), 600);
+        }
+      }
+
+      showToast(`Switched to Node #${activeNodeId}: ${node.name}`, meta.icon);
+
+      if (switchScreen) {
+        goToScreen('detection');
+      }
+    }
+
+    function renderNationalNodes(nodes) {
+      const grid = document.getElementById('national-nodes-grid');
+      if (!grid || !nodes) return;
+      let html = '';
+      
+      const hazardBadges = {
+        critical: { text: 'CRITICAL', class: 'bg-red-500 text-white' },
+        warning: { text: 'WARNING', class: 'bg-amber-500 text-white' },
+        normal: { text: 'SAFE', class: 'bg-emerald-100 text-emerald-700' }
+      };
+
+      let visibleCount = 0;
+      for (let id = 1; id <= 20; id++) {
+        const n = nodes[id];
+        if (!n) continue;
+        if (activeFilterCategory !== 'all' && n.category !== activeFilterCategory) continue;
+        visibleCount++;
+
+        const meta = hazardCategoryMeta[n.category] || hazardCategoryMeta.flood;
+        const badge = hazardBadges[n.hazard] || hazardBadges.normal;
+        const isSelected = (id === activeNodeId);
+        const isNode1 = (id === 1 || n.isReal);
+
+        html += `
+          <div onclick="selectActiveNode(${id});" class="p-3 rounded-2xl cursor-pointer transition-all duration-150 border ${isSelected ? 'ring-2 ring-blue-600 bg-blue-50/90 border-blue-400 shadow-md' : 'bg-white hover:bg-slate-50 border-slate-200/90 shadow-sm'} flex items-start justify-between gap-2.5">
+            <div class="flex items-start gap-2.5">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}">
+                ${meta.icon}
+              </div>
+              <div>
+                <div class="font-extrabold text-slate-900 text-xs flex items-center gap-1.5 flex-wrap">
+                  <span>Node #${id < 10 ? '0' + id : id}: ${n.name}</span>
+                  ${isNode1 ? '<span class="text-[9px] bg-emerald-500 text-white px-1.5 py-0.2 rounded-md font-mono font-bold">LIVE HARDWARE</span>' : ''}
+                  ${isSelected ? '<span class="text-[9px] bg-blue-600 text-white px-1.5 py-0.2 rounded-md font-mono font-bold animate-pulse">ACTIVE NOW</span>' : ''}
+                </div>
+                <div class="text-[11px] text-slate-500 mt-0.5">
+                  📍 ${n.location}
+                </div>
+                <div class="text-[10px] text-slate-600 font-mono mt-1 pt-1 border-t border-slate-100 flex items-center gap-1 flex-wrap">
+                  ${getTelemetrySummaryString(n)}
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
+              <span class="text-[9px] font-black px-2 py-0.5 rounded-full ${badge.class} font-mono tracking-tight">
+                ${badge.text}
+              </span>
+              <span class="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-0.5">
+                View ➔
+              </span>
+            </div>
+          </div>
+        `;
+      }
+
+      grid.innerHTML = html || `<div class="p-4 text-center text-slate-400 text-xs">No nodes in this category.</div>`;
+      const countBadge = document.getElementById('badge-nodes-count');
+      if (countBadge) countBadge.innerText = `${visibleCount} Nodes (${activeFilterCategory.toUpperCase()})`;
+    }
+
+    function renderModalNodes(nodes) {
+      const list = document.getElementById('modal-nodes-list');
+      if (!list || !nodes) return;
+      let html = '';
+
+      for (let id = 1; id <= 20; id++) {
+        const n = nodes[id];
+        if (!n) continue;
+        if (modalFilterCategory !== 'all' && n.category !== modalFilterCategory) continue;
+
+        const meta = hazardCategoryMeta[n.category] || hazardCategoryMeta.flood;
+        const isSelected = (id === activeNodeId);
+        const badgeClass = n.hazard === 'critical' ? 'bg-red-500 text-white' : (n.hazard === 'warning' ? 'bg-amber-500 text-white' : 'bg-emerald-100 text-emerald-700');
+
+        html += `
+          <div onclick="selectActiveNode(${id});" class="p-3 rounded-2xl cursor-pointer border transition-all ${isSelected ? 'ring-2 ring-blue-600 bg-blue-50 border-blue-400' : 'bg-slate-50 hover:bg-slate-100 border-slate-200'} flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <span class="text-xl">${meta.icon}</span>
+              <div>
+                <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                  <span>Node #${id < 10 ? '0' + id : id}: ${n.name}</span>
+                  ${isSelected ? '<span class="text-[8px] bg-blue-600 text-white px-1.5 py-0.5 rounded font-bold">SELECTED</span>' : ''}
+                </div>
+                <div class="text-[10px] text-slate-500">📍 ${n.location} • ${n.state}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${badgeClass} font-mono uppercase">
+                ${n.hazard}
+              </span>
+              <span class="text-xs text-blue-600 font-bold">➔</span>
+            </div>
+          </div>
+        `;
+      }
+      list.innerHTML = html || `<div class="p-4 text-center text-slate-400 text-xs">No nodes found.</div>`;
+    }
+
+    // Leaflet Map Initialization
     const map = L.map('simpleMap', { zoomControl: false }).setView([22.5937, 78.9629], 4.2);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(map);
 
-    const zones = [
-      { name: "Guwahati (Assam)", state: "🔴 Danger (Flood Surge)", lat: 26.1850, lng: 91.7475, color: "#ef4444" },
-      { name: "Chamoli (Uttarakhand)", state: "🟡 Warning (Forest Fire)", lat: 30.4225, lng: 79.3242, color: "#f59e0b" },
-      { name: "Wayanad (Kerala)", state: "🟢 Safe (Normal Slope)", lat: 11.6854, lng: 76.1320, color: "#10b981" },
-      { name: "Delhi NCR", state: "🟡 Warning (Air Smog)", lat: 28.6502, lng: 77.3150, color: "#f59e0b" }
-    ];
+    function initLeafletMap(nodes) {
+      if (!map || !nodes) return;
+      mapMarkers.forEach(m => {
+        if (map.hasLayer(m.marker)) map.removeLayer(m.marker);
+      });
+      mapMarkers = [];
 
-    zones.forEach(z => {
-      L.circleMarker([z.lat, z.lng], {
-        radius: 9,
-        fillColor: z.color,
-        color: "#ffffff",
-        weight: 2,
-        fillOpacity: 0.9
-      }).addTo(map).bindPopup(`<b>${z.name}</b><br>Status: <b>${z.state}</b>`);
-    });
+      for (let id = 1; id <= 20; id++) {
+        const n = nodes[id];
+        if (!n || !n.lat || !n.lng) continue;
+        const meta = hazardCategoryMeta[n.category] || hazardCategoryMeta.flood;
+
+        let markerColor = meta.color;
+        if (n.hazard === 'critical') markerColor = '#dc2626';
+        else if (n.hazard === 'warning') markerColor = '#d97706';
+
+        const marker = L.circleMarker([n.lat, n.lng], {
+          radius: (id === 1 || n.isReal) ? 10 : 8,
+          fillColor: markerColor,
+          color: "#ffffff",
+          weight: (id === 1 || n.isReal) ? 3 : 2,
+          fillOpacity: 0.95
+        });
+
+        const popupHtml = `
+          <div style="font-family: sans-serif; font-size: 12px; line-height: 1.4; padding: 2px; min-width: 195px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+              <span style="font-size: 10px; font-weight: 800; color: ${meta.color}; text-transform: uppercase;">
+                ${meta.icon} ${n.categoryLabel}
+              </span>
+              <span style="font-size: 9px; font-weight: 700; background: ${n.hazard === 'critical' ? '#ef4444' : (n.hazard === 'warning' ? '#f59e0b' : '#10b981')}; color: white; padding: 2px 6px; border-radius: 999px;">
+                ${n.hazard.toUpperCase()}
+              </span>
+            </div>
+            <b style="color: #0f172a; font-size: 13px;">${n.name}</b>
+            <div style="color: #64748b; font-size: 10px; margin-top: 2px;">📍 ${n.location}</div>
+            <div style="margin-top: 6px; padding: 5px; background: #f8fafc; border-radius: 6px; font-size: 10px; font-family: monospace; border: 1px solid #e2e8f0;">
+              ${getTelemetrySummaryString(n)}
+            </div>
+            <button onclick="selectActiveNode(${id});" style="margin-top: 8px; width: 100%; padding: 6px; background: #0f172a; color: white; border: none; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+              <span>👉</span> <span>Select &amp; Monitor Node</span>
+            </button>
+          </div>
+        `;
+
+        marker.bindPopup(popupHtml);
+        marker.addTo(map);
+
+        mapMarkers.push({
+          id: id,
+          category: n.category,
+          marker: marker
+        });
+      }
+      mapInitialized = true;
+    }
 
     function requestLiveLocation(silent = false) {
       if (!("geolocation" in navigator)) {
@@ -978,19 +1668,11 @@
           const accuracy = pos.coords.accuracy || 25;
           liveGpsActive = true;
 
-          // Update Top Header Badge
           if (btn) {
-            btn.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-600 text-white shadow-sm flex items-center gap-1 cursor-pointer";
+            btn.className = "text-[10px] font-bold px-2 py-1 rounded-xl bg-emerald-600 text-white shadow-sm flex items-center gap-1 cursor-pointer";
             if (statusTxt) statusTxt.innerText = `${liveLat.toFixed(2)}°N, ${liveLng.toFixed(2)}°E`;
           }
 
-          // Update Screen 2 Alert Location String
-          const locEl = document.getElementById('sos-loc');
-          if (locEl) {
-            locEl.innerText = `Location: Live GPS (${liveLat.toFixed(4)}° N, ${liveLng.toFixed(4)}° E) • ±${Math.round(accuracy)}m`;
-          }
-
-          // Update Map Marker
           if (map) {
             if (userLiveMarker) map.removeLayer(userLiveMarker);
             if (userLiveAccuracyCircle) map.removeLayer(userLiveAccuracyCircle);
@@ -1014,7 +1696,7 @@
             const gmapsUrl = `https://maps.google.com/?q=${liveLat},${liveLng}`;
             userLiveMarker.bindPopup(`
               <div style="font-family: sans-serif; font-size: 12px; line-height: 1.4; padding: 2px;">
-                <b style="color: #1d4ed8;">📍 Live Hardware Location (Node #01)</b><br>
+                <b style="color: #1d4ed8;">📍 Live Device Location</b><br>
                 <b>Latitude:</b> ${liveLat.toFixed(5)}<br>
                 <b>Longitude:</b> ${liveLng.toFixed(5)}<br>
                 <b>GPS Accuracy:</b> ±${Math.round(accuracy)}m<br>
@@ -1026,19 +1708,13 @@
               </div>
             `).openPopup();
 
-            map.flyTo([liveLat, liveLng], 14, { duration: 1.2 });
-          }
-
-          // Update SMS preview link if visible
-          const previewEl = document.getElementById('sms-preview-body');
-          if (previewEl && previewEl.innerText.includes('http')) {
-            previewEl.innerText = previewEl.innerText.replace(/https:\/\/maps\.google\.com\/\?q=[^\s]+/, `https://maps.google.com/?q=${liveLat.toFixed(5)},${liveLng.toFixed(5)}`);
+            map.flyTo([liveLat, liveLng], 13, { duration: 1.2 });
           }
         },
         (err) => {
           console.log("GPS Location notice:", err.message);
           if (btn && !silent && statusTxt) {
-            btn.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 shadow-sm flex items-center gap-1 cursor-pointer";
+            btn.className = "text-[10px] font-bold px-2 py-1 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 shadow-sm flex items-center gap-1 cursor-pointer";
             statusTxt.innerText = "GPS Offline";
           }
         },
@@ -1056,8 +1732,10 @@
         const port = await navigator.requestPort();
         await port.open({ baudRate: 115200 });
 
-        document.getElementById('btn-usb-link').className = "text-[11px] font-bold px-2.5 py-1.5 bg-emerald-600 text-white rounded-xl shadow-sm flex items-center gap-1";
-        document.getElementById('txt-usb-btn').innerText = "COM8 Live";
+        const btn = document.getElementById('btn-usb-link');
+        if (btn) btn.className = "text-[11px] font-bold px-2.5 py-1.5 bg-emerald-600 text-white rounded-xl shadow-sm flex items-center gap-1";
+        const btnTxt = document.getElementById('txt-usb-btn');
+        if (btnTxt) btnTxt.innerText = "COM8 Live";
 
         const textDecoder = new TextDecoderStream();
         port.readable.pipeTo(textDecoder.writable);
@@ -1084,150 +1762,40 @@
       try {
         if (line.startsWith("{")) {
           const p = JSON.parse(line);
-          if (p.type === "TELEMETRY") {
-            // 1. Water Level
-            if (p.water !== undefined) {
-              const w = parseFloat(p.water);
-              if (w < 0) {
-                document.getElementById('disp-water').innerText = 'Check Wire / 5V';
-                document.getElementById('badge-water').innerText = 'NO ECHO';
-                document.getElementById('badge-water').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white';
-                document.getElementById('desc-water').innerText = 'Hold hand 30cm away (Blind zone <25cm)';
-              } else {
-                document.getElementById('disp-water').innerText = w.toFixed(1) + ' cm';
-                document.getElementById('desc-water').innerText = 'River level is safe';
-                if (w < 30.0 && w > 0) {
-                  document.getElementById('badge-water').innerText = 'DANGER';
-                  document.getElementById('badge-water').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white';
-                  setCardStyle('danger', 'flood');
-                  return;
-                } else {
-                  document.getElementById('badge-water').innerText = 'NORMAL';
-                  document.getElementById('badge-water').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700';
-                }
-              }
+          if (p.type === "TELEMETRY" && activeNodeId === 1) {
+            if (allNodesCache[1]) {
+              if (p.water !== undefined) allNodesCache[1].water = parseFloat(p.water);
+              if (p.smoke !== undefined) allNodesCache[1].smoke = parseInt(p.smoke);
+              if (p.soil !== undefined) allNodesCache[1].soil = parseInt(p.soil);
+              updateDetectionCardsForNode(allNodesCache[1]);
             }
-
-            // 2. Smoke Level
-            if (p.smoke !== undefined) {
-              const s = parseInt(p.smoke);
-              document.getElementById('disp-smoke').innerText = s + ' ppm';
-              if (s > 800) {
-                document.getElementById('badge-smoke').innerText = 'FIRE ALERT';
-                document.getElementById('badge-smoke').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white';
-                setCardStyle('danger', 'fire');
-                return;
-              } else {
-                document.getElementById('badge-smoke').innerText = 'CLEAN';
-                document.getElementById('badge-smoke').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
-              }
-            }
-
-            // 3. Toxic Gas / Air Quality
-            if (p.toxicGas !== undefined) {
-              document.getElementById('disp-air').innerText = Math.round(p.toxicGas) + ' ppm';
-            }
-
-            // 4. Soil Moisture
-            if (p.soil !== undefined) {
-              document.getElementById('disp-soil').innerText = Math.round(p.soil) + '%';
-            }
-
-            // If neither flood nor fire, keep green safe
-            setCardStyle('safe', 'safe');
-            return;
           }
         }
       } catch (e) {}
-
-      // Fallback plain-text parsing (e.g. from test sketches)
-      if (line.includes("cm") || line.includes("Distance")) {
-        const match = line.match(/([\d\.]+)\s*cm/);
-        if (match) {
-          const val = parseFloat(match[1]);
-          document.getElementById('disp-water').innerText = val.toFixed(1) + ' cm';
-          if (val < 30.0 && val > 0) simulateHazard('flood');
-          else simulateHazard('reset');
-        }
-      }
-      if (line.includes("Smoke")) {
-        const match = line.match(/Smoke.*?:\s*(\d+)/);
-        if (match) {
-          const sVal = parseInt(match[1]);
-          document.getElementById('disp-smoke').innerText = sVal + ' ppm';
-          if (sVal > 800) simulateHazard('fire');
-        }
-      }
     }
 
-    // 8. AUTO-CONNECT VIA SERVER SSE STREAM & AUTO-POLL (100% BULLETPROOF LIVE REFLECTION)
+    // 8. AUTO-CONNECT VIA SERVER SSE STREAM & AUTO-POLL (20 NODES)
     function initAutoTelemetryStream() {
-      function renderNationalNodes(nodes) {
-        const grid = document.getElementById('national-nodes-grid');
-        if (!grid || !nodes) return;
-        let html = '';
-        const hazardColors = {
-          flood: { bg: 'bg-red-50', badge: 'bg-red-500 text-white', icon: '🌊' },
-          fire: { bg: 'bg-orange-50', badge: 'bg-orange-500 text-white', icon: '🔥' },
-          landslide: { bg: 'bg-amber-50', badge: 'bg-amber-600 text-white', icon: '⛰️' },
-          pollution: { bg: 'bg-purple-50', badge: 'bg-purple-600 text-white', icon: '🌫️' },
-          heat: { bg: 'bg-red-50', badge: 'bg-red-600 text-white', icon: '☀️' },
-          chemical: { bg: 'bg-purple-50', badge: 'bg-purple-600 text-white', icon: '🏭' },
-          drought: { bg: 'bg-yellow-50', badge: 'bg-yellow-600 text-white', icon: '🌾' },
-          normal: { bg: 'bg-slate-50', badge: 'bg-emerald-100 text-emerald-700', icon: '🟢' }
-        };
+      function processNetworkUpdate(nodes) {
+        if (!nodes) return;
+        allNodesCache = nodes;
 
-        for (let id = 1; id <= 7; id++) {
-          const n = nodes[id];
-          if (!n) continue;
-          const conf = hazardColors[n.hazard] || hazardColors.normal;
-          const isNode1 = (id === 1);
-          html += `
-            <div class="p-2 rounded-xl ${conf.bg} border border-slate-200/80 flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <span class="text-base">${conf.icon}</span>
-                <div>
-                  <div class="font-bold text-slate-900 text-[11px] flex items-center gap-1.5">
-                    <span>${n.name}</span>
-                    ${isNode1 ? '<span class="text-[9px] bg-emerald-500 text-white px-1.5 py-0.2 rounded font-mono font-bold">LIVE HARDWARE</span>' : ''}
-                  </div>
-                  <div class="text-[10px] text-slate-500 font-mono">
-                    💧 ${n.water}cm • 🔥 ${n.smoke}ppm • 🌡️ ${n.temp}°C • 🌱 ${n.soil}%
-                  </div>
-                </div>
-              </div>
-              <span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${conf.badge} uppercase font-mono">
-                ${n.hazard}
-              </span>
-            </div>
-          `;
+        if (!mapInitialized) {
+          initLeafletMap(nodes);
         }
-        grid.innerHTML = html;
-      }
 
-      function applyNodeData(n) {
-        if (!n) return;
-        const packet = {
-          type: 'TELEMETRY',
-          water: n.water,
-          smoke: n.smoke,
-          toxicGas: n.toxicGas !== undefined ? n.toxicGas : 150,
-          soil: n.soil
-        };
-        parseHardwareLine(JSON.stringify(packet));
+        renderNationalNodes(nodes);
 
-        // Update live stream clock ping
+        // Update detection cards for currently active node
+        if (nodes[activeNodeId]) {
+          updateDetectionCardsForNode(nodes[activeNodeId]);
+        }
+
+        // Live stream clock ping
         const pingEl = document.getElementById('live-packet-ping');
         if (pingEl) {
           const nowStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
           pingEl.innerText = "● Live: " + nowStr;
-        }
-
-        // Show green connected badge
-        const btn = document.getElementById('btn-usb-link');
-        if (btn) {
-          btn.className = "text-[11px] font-bold px-2.5 py-1.5 bg-emerald-600 text-white rounded-xl shadow-sm flex items-center gap-1";
-          document.getElementById('txt-usb-btn').innerText = "Node #1 Live";
         }
       }
 
@@ -1236,11 +1804,11 @@
         .then(r => r.json())
         .then(data => {
           if (data.success && data.nodes) {
-            renderNationalNodes(data.nodes);
-            if (data.nodes[1]) applyNodeData(data.nodes[1]);
+            processNetworkUpdate(data.nodes);
+            selectActiveNode(activeNodeId, false);
           }
         })
-        .catch(e => console.log("Initial fetch:", e));
+        .catch(e => console.log("Initial fetch error:", e));
 
       // 2. High-speed SSE stream
       try {
@@ -1249,27 +1817,33 @@
           try {
             const data = JSON.parse(event.data);
             if (data.type === 'TELEMETRY_UPDATE' && data.node) {
-              if (data.node.id === 'AS-01' || data.node.isReal) applyNodeData(data.node);
+              if (allNodesCache[data.node.id]) {
+                Object.assign(allNodesCache[data.node.id], data.node);
+              }
+              if (data.node.id == activeNodeId) {
+                updateDetectionCardsForNode(data.node);
+              }
             }
-            if (data.nodes) renderNationalNodes(data.nodes);
+            if (data.nodes) {
+              processNetworkUpdate(data.nodes);
+            }
           } catch (e) {}
         };
       } catch (err) {
         console.log("SSE stream:", err);
       }
 
-      // 3. 1.5-second background sync fallback
+      // 3. 2-second background sync fallback
       setInterval(() => {
         fetch('/api/nodes')
           .then(r => r.json())
           .then(data => {
             if (data.success && data.nodes) {
-              renderNationalNodes(data.nodes);
-              if (data.nodes[1]) applyNodeData(data.nodes[1]);
+              processNetworkUpdate(data.nodes);
             }
           })
           .catch(() => {});
-      }, 1500);
+      }, 2000);
     }
 
     // Run automatically when page loads
