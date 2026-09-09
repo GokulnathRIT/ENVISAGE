@@ -111,9 +111,13 @@
         <option value="ta">தமிழ்</option>
       </select>
 
-      <button id="btn-usb-link" onclick="openNodeSelectorModal()" class="text-[11px] font-bold px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-sm flex items-center gap-1 cursor-pointer transition-all" title="Click to view & switch between all 20 national nodes">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-        <span id="txt-usb-btn">Node #06</span>
+      <button id="btn-usb-link" onclick="connectUsbSerial()" class="text-[11px] font-bold px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm flex items-center gap-1 cursor-pointer transition-all" title="Click to connect live ESP32-S3 on USB Serial">
+        <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+        <span id="txt-usb-btn">🔌 Connect ESP32</span>
+      </button>
+
+      <button onclick="openNodeSelectorModal()" class="text-[11px] font-bold px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-sm flex items-center gap-1 cursor-pointer transition-all" title="Click to view & switch between all 20 national nodes">
+        <span id="txt-node-header-btn">Node #06</span>
       </button>
     </div>
   </header>
@@ -2215,7 +2219,7 @@ Click "Verify Live Feed" above to query live CAP v1.2 JSON from /api/ndma/cap...
       if (gmapsLink) gmapsLink.href = `https://maps.google.com/?q=${node.lat},${node.lng}`;
 
       // 2. Update Top Header Button
-      const headerBtnTxt = document.getElementById('txt-usb-btn');
+      const headerBtnTxt = document.getElementById('txt-node-header-btn');
       if (headerBtnTxt) {
         headerBtnTxt.innerText = `Node #${activeNodeId < 10 ? '0' + activeNodeId : activeNodeId}`;
       }
@@ -2665,16 +2669,50 @@ Click "Verify Live Feed" above to query live CAP v1.2 JSON from /api/ndma/cap...
       try {
         if (line.startsWith("{")) {
           const p = JSON.parse(line);
-          if (p.type === "TELEMETRY") {
-            const targetId = (activeNodeId === 6 || activeNodeId === 1) ? activeNodeId : 6;
-            if (allNodesCache[targetId]) {
-              if (p.smoke !== undefined) allNodesCache[targetId].smoke = parseInt(p.smoke);
-              if (p.water !== undefined) allNodesCache[targetId].water = parseFloat(p.water);
-              if (p.soil !== undefined) allNodesCache[targetId].soil = parseInt(p.soil);
-              if (p.temp !== undefined) allNodesCache[targetId].temp = parseFloat(p.temp);
-              if (p.humidity !== undefined) allNodesCache[targetId].humidity = parseFloat(p.humidity);
-              updateDetectionCardsForNode(allNodesCache[targetId]);
+          const targetId = activeNodeId;
+          if (allNodesCache[targetId]) {
+            if (p.smoke !== undefined) allNodesCache[targetId].smoke = parseInt(p.smoke);
+            if (p.toxicGas !== undefined) allNodesCache[targetId].toxicGas = parseInt(p.toxicGas);
+            if (p.water !== undefined) allNodesCache[targetId].water = parseFloat(p.water);
+            if (p.soil !== undefined) allNodesCache[targetId].soil = parseInt(p.soil);
+            if (p.temp !== undefined) allNodesCache[targetId].temp = parseFloat(p.temp);
+            if (p.humidity !== undefined) allNodesCache[targetId].humidity = parseFloat(p.humidity);
+            if (p.hazard !== undefined) allNodesCache[targetId].hazard = p.hazard;
+            
+            // Recompute hazard if smoke/water spikes from hardware
+            if (allNodesCache[targetId].smoke > 800) {
+              allNodesCache[targetId].hazard = 'critical';
+            } else if (allNodesCache[targetId].smoke > 200) {
+              allNodesCache[targetId].hazard = 'warning';
+            } else if (allNodesCache[targetId].water < 25.0 && allNodesCache[targetId].category === 'flood') {
+              allNodesCache[targetId].hazard = 'critical';
             }
+
+            allNodesCache[targetId].isReal = true;
+            updateDetectionCardsForNode(allNodesCache[targetId]);
+            setCardForNodeHazard(allNodesCache[targetId]);
+          }
+        } else {
+          // Handle loose text format: e.g. "Smoke: 350", "Water: 18.5 cm", "Temp: 32.4"
+          const targetId = activeNodeId;
+          if (allNodesCache[targetId]) {
+            const smokeMatch = line.match(/smoke[:=\s]+([\d\.]+)/i);
+            if (smokeMatch) allNodesCache[targetId].smoke = parseInt(smokeMatch[1]);
+
+            const gasMatch = line.match(/(?:toxic|gas|mq135)[:=\s]+([\d\.]+)/i);
+            if (gasMatch) allNodesCache[targetId].toxicGas = parseInt(gasMatch[1]);
+
+            const waterMatch = line.match(/(?:water|distance)[:=\s]+([\d\.]+)/i);
+            if (waterMatch) allNodesCache[targetId].water = parseFloat(waterMatch[1]);
+
+            const tempMatch = line.match(/(?:temp|temperature)[:=\s]+([\d\.]+)/i);
+            if (tempMatch) allNodesCache[targetId].temp = parseFloat(tempMatch[1]);
+
+            const humMatch = line.match(/(?:humidity|hum)[:=\s]+([\d\.]+)/i);
+            if (humMatch) allNodesCache[targetId].humidity = parseFloat(humMatch[1]);
+
+            updateDetectionCardsForNode(allNodesCache[targetId]);
+            setCardForNodeHazard(allNodesCache[targetId]);
           }
         }
       } catch (e) {}
