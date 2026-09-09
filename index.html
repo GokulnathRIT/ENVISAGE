@@ -113,7 +113,7 @@
 
       <button id="btn-usb-link" onclick="openNodeSelectorModal()" class="text-[11px] font-bold px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-sm flex items-center gap-1 cursor-pointer transition-all" title="Click to view & switch between all 20 national nodes">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-        <span id="txt-usb-btn">Node #01</span>
+        <span id="txt-usb-btn">Node #06</span>
       </button>
     </div>
   </header>
@@ -1311,7 +1311,7 @@ Click "Verify Live Feed" above to query live CAP v1.2 JSON from /api/ndma/cap...
     }
 
     // ================= 6. 20 GEOSPATIAL NODES & INTERACTIVE SELECTION SYSTEM =================
-    let activeNodeId = 1;
+    let activeNodeId = 6;
     let allNodesCache = {
   // ================= 🌊 FLOOD EARLY WARNING SENTINELS (5 NODES) =================
   1: {
@@ -2665,12 +2665,15 @@ Click "Verify Live Feed" above to query live CAP v1.2 JSON from /api/ndma/cap...
       try {
         if (line.startsWith("{")) {
           const p = JSON.parse(line);
-          if (p.type === "TELEMETRY" && activeNodeId === 1) {
-            if (allNodesCache[1]) {
-              if (p.water !== undefined) allNodesCache[1].water = parseFloat(p.water);
-              if (p.smoke !== undefined) allNodesCache[1].smoke = parseInt(p.smoke);
-              if (p.soil !== undefined) allNodesCache[1].soil = parseInt(p.soil);
-              updateDetectionCardsForNode(allNodesCache[1]);
+          if (p.type === "TELEMETRY") {
+            const targetId = (activeNodeId === 6 || activeNodeId === 1) ? activeNodeId : 6;
+            if (allNodesCache[targetId]) {
+              if (p.smoke !== undefined) allNodesCache[targetId].smoke = parseInt(p.smoke);
+              if (p.water !== undefined) allNodesCache[targetId].water = parseFloat(p.water);
+              if (p.soil !== undefined) allNodesCache[targetId].soil = parseInt(p.soil);
+              if (p.temp !== undefined) allNodesCache[targetId].temp = parseFloat(p.temp);
+              if (p.humidity !== undefined) allNodesCache[targetId].humidity = parseFloat(p.humidity);
+              updateDetectionCardsForNode(allNodesCache[targetId]);
             }
           }
         }
@@ -2751,6 +2754,7 @@ Click "Verify Live Feed" above to query live CAP v1.2 JSON from /api/ndma/cap...
 
     // Run automatically when page loads
     window.addEventListener('DOMContentLoaded', () => {
+      selectActiveNode(activeNodeId, false);
       initAutoTelemetryStream();
       setTimeout(() => requestLiveLocation(true), 1200);
     });
