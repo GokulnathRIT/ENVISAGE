@@ -128,13 +128,13 @@
   <section id="screen-detection" class="space-y-3">
     
     <!-- 0. ACTIVE SELECTED SENSOR NODE BANNER -->
-    <div id="active-node-banner" class="gpay-card p-3.5 bg-gradient-to-r from-orange-950 via-slate-900 to-red-950 text-white shadow-md space-y-2 border border-orange-700/60">
+    <div id="active-node-banner" class="gpay-card p-3.5 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white shadow-md space-y-2 border border-slate-700/60">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-1.5 flex-wrap">
           <span id="active-node-cat-badge" class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-400/40 uppercase tracking-wide flex items-center gap-1 font-mono">
             <span id="active-node-cat-icon">🔥</span> <span id="active-node-cat-name">WILDFIRE &amp; SMOKE SENTINEL</span>
           </span>
-          <span id="active-node-hardware-badge" class="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-red-600 text-white animate-pulse">EDGE SENSOR #06</span>
+          <span id="active-node-hardware-badge" class="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-emerald-500 text-white">EDGE NODE #06</span>
         </div>
         <button onclick="openNodeSelectorModal()" class="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20 transition-all flex items-center gap-1 cursor-pointer shadow-sm">
           <span>🔄</span> <span>Switch (20)</span>
@@ -151,8 +151,8 @@
       </div>
 
       <div class="flex items-center justify-between text-[10px] text-slate-300 pt-1.5 border-t border-slate-700/60 font-mono">
-        <span id="active-node-sensor-type" class="truncate max-w-[210px] text-orange-300">⚡ MQ-2 Optical Smoke + Thermal IR Array</span>
-        <a id="active-node-gmaps-link" href="https://maps.google.com/?q=30.4225,79.3242" target="_blank" class="text-orange-300 hover:text-orange-200 underline font-bold flex items-center gap-0.5">
+        <span id="active-node-sensor-type" class="truncate max-w-[210px] text-slate-300">⚡ MQ-2 Optical Smoke + Thermal IR Array</span>
+        <a id="active-node-gmaps-link" href="https://maps.google.com/?q=30.4225,79.3242" target="_blank" class="text-blue-300 hover:text-blue-200 underline font-bold flex items-center gap-0.5">
           <span>📍</span> <span>Maps Pin ↗</span>
         </a>
       </div>
@@ -163,15 +163,15 @@
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-1.5">
           <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
           <span class="text-xs font-black text-slate-800 tracking-tight flex items-center gap-1">
             <span>⚡ Edge AI Intelligence</span>
             <span class="text-[9px] bg-slate-900 text-white font-mono px-1.5 py-0.2 rounded font-bold">ESP32 TinyML</span>
           </span>
         </div>
-        <span id="edge-ai-latency" class="text-[10px] font-mono text-red-700 font-bold bg-red-50 px-2 py-0.5 rounded-full border border-red-200">
+        <span id="edge-ai-latency" class="text-[10px] font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
           ● 14ms Latency
         </span>
       </div>
@@ -184,8 +184,8 @@
         </div>
         <div class="p-1.5 rounded-xl bg-slate-50 border border-slate-100">
           <div class="text-[9px] font-bold text-slate-400 uppercase font-mono">Anomaly Score</div>
-          <div class="text-[11px] font-black text-red-600 font-mono mt-0.5" id="edge-anomaly-score">0.96 (CRITICAL)</div>
-          <div class="text-[9px] text-red-600 font-bold" id="edge-confidence">98.0% Conf</div>
+          <div class="text-[11px] font-black text-slate-800 font-mono mt-0.5" id="edge-anomaly-score">0.12 (Safe)</div>
+          <div class="text-[9px] text-blue-600 font-bold" id="edge-confidence">96.4% Conf</div>
         </div>
         <div class="p-1.5 rounded-xl bg-slate-50 border border-slate-100">
           <div class="text-[9px] font-bold text-slate-400 uppercase font-mono">Offline Buffer</div>
@@ -203,16 +203,16 @@
     </div>
 
     <!-- 1. BIG TRAFFIC LIGHT STATUS CARD -->
-    <div id="traffic-card" onclick="goToScreen('alert')" class="gpay-card p-5 cursor-pointer border-2 border-red-500 bg-red-50/50 pulse-red text-center space-y-2">
-      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500 text-white text-3xl shadow-lg shadow-red-500/30" id="traffic-circle-icon">
-        🔴
+    <div id="traffic-card" onclick="goToScreen('alert')" class="gpay-card p-5 cursor-pointer border-2 border-emerald-500 bg-emerald-50/40 pulse-green text-center space-y-2">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500 text-white text-3xl shadow-lg shadow-emerald-500/30" id="traffic-circle-icon">
+        🟢
       </div>
       <div>
-        <div class="text-[11px] font-bold uppercase tracking-wider text-red-700" id="txt-status-level">STATUS: CRITICAL WILDFIRE HAZARD</div>
-        <div class="text-xl font-black text-slate-900 mt-0.5" id="txt-status-title">High Combustion Smoke Detected</div>
-        <p class="text-xs text-slate-600 mt-1" id="txt-status-desc">Optical smoke particulate at 1,480 ppm with canopy heat at 48.6°C. Immediate alert dispatched.</p>
+        <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700" id="txt-status-level">STATUS: SAFE / NORMAL (सुरक्षित)</div>
+        <div class="text-xl font-black text-slate-900 mt-0.5" id="txt-status-title">All Conditions Stable (Chamoli Ridge)</div>
+        <p class="text-xs text-slate-600 mt-1" id="txt-status-desc">Canopy smoke, infrared thermal heat, and combustion levels are within safe environmental limits.</p>
       </div>
-      <div class="inline-block text-[11px] font-bold text-red-600 bg-white px-3 py-1 rounded-full shadow-sm border border-red-200" id="txt-tap-sos">
+      <div class="inline-block text-[11px] font-bold text-blue-600 bg-white px-3 py-1 rounded-full shadow-sm border border-slate-200" id="txt-tap-sos">
         Tap to View Alert &amp; SOS Details ➔
       </div>
     </div>
@@ -221,12 +221,12 @@
     <div class="flex items-center justify-between px-1 pt-1">
       <div class="flex items-center gap-1.5">
         <span class="relative flex h-2 w-2">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
         </span>
         <span class="text-xs font-extrabold text-slate-800 tracking-tight" id="txt-sec-sensors">Live Smoke Sentinel Telemetry:</span>
       </div>
-      <span class="text-[10px] font-mono text-orange-700 font-bold bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200" id="live-packet-ping">
+      <span class="text-[10px] font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200" id="live-packet-ping">
         ● Live Stream
       </span>
     </div>
@@ -234,47 +234,47 @@
     <div class="grid grid-cols-2 gap-2.5">
       
       <!-- Card 1: Optical Smoke -->
-      <div id="card-1-box" class="gpay-card p-4 space-y-1.5 border-t-4 border-t-red-500">
+      <div id="card-1-box" class="gpay-card p-4 space-y-1.5 border-t-4 border-t-orange-500">
         <div class="flex items-center justify-between">
           <span class="text-2xl" id="icon-water">🔥</span>
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-600 text-white animate-pulse" id="badge-water">FIRE SPIKE</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700" id="badge-water">CLEAN</span>
         </div>
-        <div class="text-xl font-black text-slate-900 font-mono" id="disp-water">1480 ppm</div>
+        <div class="text-xl font-black text-slate-900 font-mono" id="disp-water">38 ppm</div>
         <div class="text-xs font-bold text-slate-700" id="lbl-water">Combustion Smoke</div>
-        <div class="text-[10px] text-slate-500" id="desc-water">Dense smoke particulate detected</div>
+        <div class="text-[10px] text-slate-500" id="desc-water">Canopy air clear of smoke</div>
       </div>
 
       <!-- Card 2: Canopy Thermal Temp -->
       <div id="card-2-box" class="gpay-card p-4 space-y-1.5 border-t-4 border-t-orange-500">
         <div class="flex items-center justify-between">
           <span class="text-2xl" id="icon-smoke">🌡️</span>
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white" id="badge-smoke">HEATWAVE</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700" id="badge-smoke">NOMINAL</span>
         </div>
-        <div class="text-xl font-black text-slate-900 font-mono" id="disp-smoke">48.6 °C</div>
+        <div class="text-xl font-black text-slate-900 font-mono" id="disp-smoke">27.5 °C</div>
         <div class="text-xs font-bold text-slate-700" id="lbl-smoke">Canopy Thermal Temp</div>
         <div class="text-[10px] text-slate-500" id="desc-smoke">Infrared thermal array sensor</div>
       </div>
 
       <!-- Card 3: Relative Humidity -->
-      <div id="card-3-box" class="gpay-card p-4 space-y-1.5 border-t-4 border-t-amber-500">
+      <div id="card-3-box" class="gpay-card p-4 space-y-1.5 border-t-4 border-t-blue-500">
         <div class="flex items-center justify-between">
           <span class="text-2xl" id="icon-air">💨</span>
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-600 text-white" id="badge-air">DRY TINDER</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700" id="badge-air">OPTIMAL</span>
         </div>
-        <div class="text-xl font-black text-slate-900 font-mono" id="disp-air">12%</div>
+        <div class="text-xl font-black text-slate-900 font-mono" id="disp-air">54%</div>
         <div class="text-xs font-bold text-slate-700" id="lbl-air">Relative Humidity</div>
-        <div class="text-[10px] text-slate-500" id="desc-air">Wildfire ignition risk factor</div>
+        <div class="text-[10px] text-slate-500" id="desc-air">Safe humidity level</div>
       </div>
 
       <!-- Card 4: Carbon Monoxide (CO) -->
-      <div id="card-4-box" class="gpay-card p-4 space-y-1.5 border-t-4 border-t-red-600">
+      <div id="card-4-box" class="gpay-card p-4 space-y-1.5 border-t-4 border-t-emerald-500">
         <div class="flex items-center justify-between">
           <span class="text-2xl" id="icon-soil">⚠️</span>
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white" id="badge-soil">TOXIC GAS</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700" id="badge-soil">TRACE</span>
         </div>
-        <div class="text-xl font-black text-slate-900 font-mono" id="disp-soil">210 ppm</div>
+        <div class="text-xl font-black text-slate-900 font-mono" id="disp-soil">12 ppm</div>
         <div class="text-xs font-bold text-slate-700" id="lbl-soil">Carbon Monoxide (CO)</div>
-        <div class="text-[10px] text-slate-500" id="desc-soil">Electrochemical combustion gas</div>
+        <div class="text-[10px] text-slate-500" id="desc-soil">Within clean atmospheric baseline</div>
       </div>
 
     </div>
@@ -1437,14 +1437,14 @@ Click "Verify Live Feed" above to query live CAP v1.2 JSON from /api/ndma/cap...
     lng: 79.3242,
     isReal: false,
     water: 140.0,
-    smoke: 1480,
-    coPpm: 210,
-    temp: 48.6,
-    humidity: 12,
-    soil: 8,
+    smoke: 38,
+    coPpm: 12,
+    temp: 27.5,
+    humidity: 54,
+    soil: 32,
     rain: 0.0,
-    hazard: "critical",
-    confidence: 98,
+    hazard: "normal",
+    confidence: 96,
     primarySensor: "MQ-2 Optical Smoke + Far-Infrared Flame Array",
     lastUpdated: new Date().toISOString()
   },
